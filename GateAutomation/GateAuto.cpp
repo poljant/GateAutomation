@@ -111,6 +111,7 @@ void GateAuto::closegate2(){
     currentstate2 = GATE_CLOSING2;
 }
 bool GateAuto::bellon(){
+
 	return false;
 }
 uint8_t GateAuto::stategate(){
@@ -156,20 +157,21 @@ void GateAuto::sendcodeC(){
 void GateAuto::sendcodeD(){
 	sendcoderc(codekeyD);
 }
-/*bool GateAutomation::addcoderc(){
+bool GateAuto::addcoderc(unsigned long code, uint8_t key){
 	uint8_t i;
 	for (i=1 ; i<= howmanykeys;i++){
-		if (buffercoderc[i]==0) {
-			buffercoderc[i].code = codrc;
+		if (buffercoderc[i].code == 0) {
+			buffercoderc[i].code = code;
+			buffercoderc[i].nkey = key;
 			return true;
 		}
 	}
 	return false;
-}*/
+}
 bool GateAuto::addcodercA(){
 	uint8_t i;
 	for (i=1 ; i<= howmanykeys;i++){
-		if (buffercoderc[i].code==0) {
+		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 1;
 			return true;
@@ -233,7 +235,73 @@ void GateAuto::openwicket(){
 	relw.setOff();
 }
 void GateAuto::gateloop(){
+	codrc = 0;
 	codrc = readcoderc();
+//	if (serchcodes(codrc)>0){
+		switch (serchcodes(codrc)){
+			case 1:
+				if (GATE_STOP == (currentstate & GATE_STOP)){
+					currentstate = (currentstate and 0b01111111);
+					if (currentstate == GATE_CLOSING){
+						opengate();
+					}
+					if (currentstate == GATE_OPENING){
+						closegate();
+					}
+				}
+				if (currentstate == GATE_CLOSE){
+					opengate();
+				}
+				if (currentstate == GATE_OPEN){
+					closegate();
+				}
+				if (currentstate == GATE_CLOSING){
+					currentstate = currentstate | GATE_STOP;
+					stop();
+				}
+				if (currentstate == GATE_OPENING){
+					currentstate = currentstate | GATE_STOP;
+					stop();
+								}
+
+			break;
+			case 2:
+				if (GATE_STOP == (currentstate & GATE_STOP)){
+					currentstate = (currentstate and 0b01111111);
+					if (currentstate == GATE_CLOSING2){
+						opengate2();
+					}
+					if (currentstate == GATE_OPENING2){
+						closegate2();
+					}
+				}
+				if (currentstate == GATE_CLOSE){
+					opengate2();
+				}
+				if (currentstate == GATE_OPEN){
+					closegate2();
+				}
+				if (currentstate == GATE_CLOSING2){
+					currentstate = currentstate | GATE_STOP;
+					stop();
+				}
+				if (currentstate == GATE_OPENING2){
+					currentstate = currentstate | GATE_STOP;
+					stop();
+								}
+			break;
+			case 3
+			:
+			break;
+			case 4:
+
+			break;
+			default:
+
+			break;
+
+		};
+//	};
 	if (!takes and currentstate and time_current<millis()) {
 	time_current = millis()+time_gate;
 	takes = true;

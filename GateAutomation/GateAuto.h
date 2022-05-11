@@ -103,7 +103,7 @@ void gateloop();
 void openwicket();
 unsigned long readcoderc();
 void sendcoderc(unsigned long code);
-bool addcoderc();
+bool addcoderc(unsigned long code, uint8_t nkey);
 bool addcodercA();
 bool addcodercB();
 bool addcodercC();

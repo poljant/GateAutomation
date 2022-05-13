@@ -12,6 +12,7 @@
 #include "secrets.h"
 #include "debug.h"
 #include <Button2.h>
+#include <LittleFS.h>
 #include "WiFiManager.h"
 #include "../GateAutomation/GateAuto.h"
 
@@ -78,6 +79,11 @@ void clickdev(Button2 &btn) {
 void setup() {
 	WiFi.mode(WIFI_STA);
 	Serial.begin(115200);
+	  // Initialize LittleFS
+	  if(!LittleFS.begin()){
+		  DEBUG_MSG_PROG("[SETUP] Wystąpił błąd podczas montowania LittleFS");
+	    return;
+	  }
 	setwifi(eraseSetWiFi);
 	ga.begin();
 	buttondevice.begin(ga.pin_button);

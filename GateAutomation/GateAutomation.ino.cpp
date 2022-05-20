@@ -7,7 +7,6 @@
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
-//#include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include "secrets.h"
 #include "debug.h"
@@ -15,6 +14,8 @@
 #include <LittleFS.h>
 #include "WiFiManager.h"
 #include "../GateAutomation/GateAuto.h"
+//#include <ESPAsyncTCP.h>
+//#include "../lib/ESPAsyncWebServer/src/ESPAsyncWebServer.h"
 
 String version = VERSION;
 bool eraseSetWiFi = false;
@@ -23,11 +24,14 @@ unsigned long apminutes = 10;
 #define ID_DEV1 "BELL"
 
 #ifdef IP_STATIC
-IPAddress IPadr(10, 110, 1, 115); // stały IP
+IPAddress IPadr(10, 110, 3, 33); // stały IP
 IPAddress netmask(255, 255, 0, 0);
 IPAddress gateway(10, 110, 0, 1);
 //////////////////////////////
 #endif
+
+// Create AsyncWebServer object on port 80
+//AsyncWebServer server(80);
 //Button2 buttondevice;
 GateAuto ga;
 //unsigned int ilM=10;
@@ -45,6 +49,34 @@ String hostname(void) {
 	//	Serial.println(uid);
 	return String(uid);
 }
+/*// Replaces placeholder with LED state value
+String processor(const String& var){
+  Serial.println(var);
+//  if(var == "GPIO_STATE"){
+//    if(digitalRead(ledPin)){
+//      ledState = "OFF";
+ //   }
+ //   else{
+//      ledState = "ON";
+ //   }
+//    Serial.print(ledState);
+//    return ledState;
+//  }
+  return String();
+}*/
+/*void WebPages() {
+	  // Route for root / web page
+	  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+	    request->send(LittleFS, "/index.html", String(), false, processor);
+	  });
+
+	  // Route to load style.css file
+	  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+	    request->send(LittleFS, "/style.css", "text/css");
+	  });
+	  // Start server
+	  server.begin();
+}*/
 
 //dane dla AP
 const char *ap_ssid = hostname().c_str();   // SSID AP
@@ -84,7 +116,8 @@ void setup() {
 		  DEBUG_MSG_PROG("[SETUP] Wystąpił błąd podczas montowania LittleFS");
 	    return;
 	  }
-	setwifi(eraseSetWiFi);
+
+	setwifi(false); //eraseSetWiFi);
 	ga.begin();
 	buttondevice.begin(ga.pin_button);
 //	buttondevice1.setLongClickTime(4000);

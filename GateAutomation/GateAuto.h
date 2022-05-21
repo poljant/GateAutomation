@@ -45,18 +45,18 @@ class GateAuto {
 	uint8_t pin_RxD = 3;	//RxD
 	uint8_t pin_TxD = 1;	//TxD
 	uint8_t pin_led = 2; //GPIO2 D4
-	bool isopen1 = false;
-	bool openinggate1 = false;
-	bool closinggate1 = false;
-	bool isopen2 = false;
-	bool openinggate2 = false;
-	bool closinggate2 = false;
-	bool isopenwicket = false;
+//	bool isopen1 = false;
+//	bool openinggate1 = false;
+//	bool closinggate1 = false;
+//	bool isopen2 = false;
+//	bool openinggate2 = false;
+//	bool closinggate2 = false;
+//	bool isopenwicket = false;
 	bool takes = false;
 
 	int time_closing = 15; // sek
-	int time_gateA = time_closing * 1000;
-	int time_gateB = time_closing * 1000;
+//	int time_gateA = time_closing * 1000;
+//	int time_gateB = time_closing * 1000;
 	int time_delay_gateA = 0 * 1000;	//msekund
 	int time_delay_gateB = 2 * 1000;	//msekund
 	int time_delay_wicket = 2 * 1000;	//msekund
@@ -72,8 +72,6 @@ class GateAuto {
 	unsigned long ncodrc = 0;
 	uint8_t nkeyx = 0;
 
-
-//	const char statusget[] = {"GATE_CLOSE", "GATE_OPEN", "GATE_OPENING", "GATE_CLOSING"};
 public:
 	//zmienne pamiętające status bramy
 	uint8_t currentstate = 0b0;
@@ -83,12 +81,15 @@ public:
 	uint8_t currentstate2 = 0b0;
 	volatile unsigned long codrc = 0;
 	uint8_t nkey = 0;
-	uint8_t pin_button = 0; //GPIO0
-	unsigned long codekeyA = 6115587; //0b000000110001010100000011;
-	unsigned long codekeyB = 6115776; //0b000000110001010111000000;
-	unsigned long codekeyC = 6115632;  //0b000000110001010100110000;
-	unsigned long codekeyD = 6115596; //0b000000110001010100001100;
-//	datakeys buffercoderc[12];
+	uint8_t pin_button = 0; //GPIO0 D3
+	//kody pilota nieprogramowalnego
+	unsigned long codekeyA1 = 6115587; //0b10111010101000100000011
+	unsigned long codekeyB1 = 6115776; //0b10111010101000111000000
+	unsigned long codekeyC1 = 6115632; //0b10111010101000100110000
+	unsigned long codekeyD1 = 6115596; //0b10111010101000100001100
+//	kody pilota z przyciskami A i B
+	//201987 - 0b000000110001010100000011;
+	//202176 - 0b000000110001010111000000;
 
 	GateAuto();
 	virtual ~GateAuto();
@@ -105,7 +106,6 @@ void closegate2();
 uint8_t stategate2();
 bool bellon();
 void stop();
-void stop2();
 void pause();
 void start();
 bool statebutton();
@@ -120,7 +120,7 @@ bool addcodercA();
 bool addcodercB();
 bool addcodercC();
 bool addcodercD();
-bool clearcoderc();
+bool clearcodesrc();
 bool clearcoderc(uint8_t ncode);
 unsigned long viewcoderc(uint8_t ncode);
 void setcodes();
@@ -130,8 +130,9 @@ void sendcodeC();
 void sendcodeD();
 uint8_t serchcodes(unsigned long code);
 //void clickdev1();
+const char bin2str(unsigned long t);
 const char byte2str(uint8_t t);
-unsigned long str2bin(char s);
+const char str2bin(unsigned long s);
 };
 
 #endif /* GATEAUTOMATION_GATEAUTO_H_ */

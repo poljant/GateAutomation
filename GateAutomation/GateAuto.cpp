@@ -73,23 +73,23 @@ void GateAuto::addcodesrc() {
 	buffercoderc[3].nkey = 4;  //key D
 
 //dodaj kody szczytane z pilota nieprogramowalnego
-	buffercoderc[4].code = codekeyA;
+	buffercoderc[4].code = codekeyA1;
 	buffercoderc[4].nkey = 1;
-	buffercoderc[5].code = codekeyB;
+	buffercoderc[5].code = codekeyB1;
 	buffercoderc[5].nkey = 2;
-	buffercoderc[6].code = codekeyC;
+	buffercoderc[6].code = codekeyC1;
 	buffercoderc[6].nkey = 3;
-	buffercoderc[7].code = codekeyD;
+	buffercoderc[7].code = codekeyD1;
 	buffercoderc[7].nkey = 4;
 
-	buffercoderc[8].code = 0;
+/*	buffercoderc[8].code = 0;
 	buffercoderc[8].nkey = 1;
 	buffercoderc[9].code = 0;
 	buffercoderc[9].nkey = 2;
 	buffercoderc[10].code = 0;
 	buffercoderc[10].nkey = 3;
 	buffercoderc[11].code = 0;
-	buffercoderc[11].nkey = 4;
+	buffercoderc[11].nkey = 4;*/
 //	DEBUG_MSG_PROG("[GATE] Start addcodesrc() \n\r");
 }
 void GateAuto::opengate() {
@@ -186,15 +186,7 @@ void GateAuto::stop() {
 	currentstate = currentstate | GATE_STOP;
 	DEBUG_MSG_PROG("[GATE] Stop() currentstate = %d \n\r", currentstate);
 }
-void GateAuto::stop2() {
-	//wyłącz przekaźniki
-	rel2A.setOff();
-	rel2B.setOff();
-	//ustaw bit stopu
-	currentstate = currentstate | GATE_STOP;
-// currentstate = currentstate2;
-	DEBUG_MSG_PROG("[GATE] Stop2() currentstate = %d \n\r", currentstate);
-}
+
 unsigned long GateAuto::readcoderc() {
 	ncodrc = myrc.getReceivedValue();
 	myrc.resetAvailable();
@@ -208,20 +200,20 @@ void GateAuto::sendcoderc(unsigned long code) {
 	myrc.send(code, 24);
 }
 void GateAuto::sendcodeA() {
-	sendcoderc(codekeyA);
+	sendcoderc(buffercoderc[0].code);
 }
 void GateAuto::sendcodeB() {
-	sendcoderc(codekeyB);
+	sendcoderc(buffercoderc[1].code);
 }
 void GateAuto::sendcodeC() {
-	sendcoderc(codekeyC);
+	sendcoderc(buffercoderc[2].code);
 }
 void GateAuto::sendcodeD() {
-	sendcoderc(codekeyD);
+	sendcoderc(buffercoderc[3].code);;
 }
 bool GateAuto::addcoderc(unsigned long code, uint8_t key) {
 	uint8_t i;
-	for (i = 1; i <= howmanykeys; i++) {
+	for (i = 4; i <= howmanykeys; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = code;
 			buffercoderc[i].nkey = key;
@@ -232,7 +224,7 @@ bool GateAuto::addcoderc(unsigned long code, uint8_t key) {
 }
 bool GateAuto::addcodercA() {
 	uint8_t i;
-	for (i = 1; i <= howmanykeys; i++) {
+	for (i = 4; i <= howmanykeys; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 1;
@@ -243,7 +235,7 @@ bool GateAuto::addcodercA() {
 }
 bool GateAuto::addcodercB() {
 	uint8_t i;
-	for (i = 1; i <= howmanykeys; i++) {
+	for (i = 4; i <= howmanykeys; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 2;
@@ -254,7 +246,7 @@ bool GateAuto::addcodercB() {
 }
 bool GateAuto::addcodercC() {
 	uint8_t i;
-	for (i = 1; i <= howmanykeys; i++) {
+	for (i = 4; i <= howmanykeys; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 3;
@@ -265,7 +257,7 @@ bool GateAuto::addcodercC() {
 }
 bool GateAuto::addcodercD() {
 	uint8_t i;
-	for (i = 1; i <= howmanykeys; i++) {
+	for (i = 4; i <= howmanykeys; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 4;
@@ -274,16 +266,18 @@ bool GateAuto::addcodercD() {
 	}
 	return false;
 }
-bool GateAuto::clearcoderc() {
+bool GateAuto::clearcodesrc() {
+	//kasuje wszystkie kody rc oprócz 4 pierwszych
 	uint8_t i;
-	for (i = 1; i < howmanykeys; i++) {
+	for (i = 4; i < howmanykeys; i++) {
 		buffercoderc[i].code = 0;
 		buffercoderc[i].nkey = 0;
 	}
 	return true;
 }
 bool GateAuto::clearcoderc(uint8_t ncode) {
-	if (ncode <= 0 and ncode > howmanykeys)
+	//kasuje kod na podanym miejscu. Nie można skasować 4 pierwszych
+	if (ncode < 4 and ncode > howmanykeys)
 		return false;
 	buffercoderc[ncode].code = 0;
 	buffercoderc[ncode].nkey = 0;
@@ -293,9 +287,11 @@ unsigned long GateAuto::viewcoderc(uint8_t ncode) {
 	return buffercoderc[ncode].code;
 }
 void GateAuto::openwicket() {
+	DEBUG_MSG_PROG("[GATE] Start openwicket() opening\n\r");
 	relw.setOn();
 	delay(time_delay_wicket);
 	relw.setOff();
+	DEBUG_MSG_PROG("[GATE] Start openwicket() open\n\r");
 }
 void GateAuto::gateloop() {
 	//czekaj aż minie czas od ostatniego naciśnięcia klawisza na pilocie
@@ -312,6 +308,7 @@ void GateAuto::gateloop() {
 			nkeyx = serchcodes(codrc);
 			DEBUG_MSG_PROG("[GATE_LOOP] Coderc %ld, nkey = %d \n\r", codrc,
 					nkeyx);
+
 //			codrc = 0;
 			time_read_code = millis() + time_delay_read_code;
 		}
@@ -346,18 +343,7 @@ void GateAuto::gateloop() {
 			closegate();
 			break;
 		}
-		/*		// gdy w czasie zamykania wcisnięto key A
-		 if (currentstate & GATE_STOP) {
-		 if (currentstate & GATE_CLOSING) {
-		 opengate();
-		 break;
-		 }
-		 if (currentstate & GATE_OPENING) {
-		 closegate();
-		 break;
-		 }
-		 break;
-		 }*/
+
 		// gdy w czasie zamykania wcisnięto key A
 		if (currentstate & GATE_CLOSING) {
 			stop();
@@ -399,30 +385,20 @@ void GateAuto::gateloop() {
 			closegate2();
 			break;
 		}
-		/*				// gdy w czasie zamykania wcisnięto key B
-		 if (currentstate & GATE_STOP) {
-		 if (currentstate & GATE_CLOSING2) {
-		 opengate2();
-		 break;
-		 }
-		 if (currentstate & GATE_OPENING2) {
-		 closegate2();
-		 break;
-		 }
-		 break;
-		 }*/
+
 		// gdy w czasie zamykania wcisnięto key B
 		if (currentstate & GATE_CLOSING2) {
-			stop2();
+			stop();
 			break;
 		}
 		// gdy w czasie otwierania wcisnięto key B
 		if (currentstate & GATE_OPENING2) {
-			stop2();
+			stop();
 			break;
 		}
 		break;
 	case 3:
+		openwicket();
 		nkeyx = 0;
 		break;
 
@@ -521,11 +497,35 @@ uint8_t GateAuto::serchcodes(unsigned long code) {
 	return 0;
 }
 const char GateAuto::byte2str(uint8_t b){
-	char bits[]="00000000";
-//	for (uint8_t i=7; i>=0; i--) {
-		itoa(b, bits, 2);
-//		bits[i] = (b & 0b1) ? "1": "0";
-//	}
-	return *bits ;
+ char* byte[]="00000000";
+ char bits = 0b10000000;
+	if (b == 0xFF){
+		for (uint8_t i = 0; i < 8; i++){
+			bits = bits >> 1;
+			byte[i] = (b and bits) & 0b110000; //chr(48)
+		}
+		return byte;
+	} else {
+
+	return byte;
+	}
+}
+const char GateAuto::bin2str(unsigned long b){
+	char* bin[] = "000000000000000000000000";
+	bin = "";
+	if (b == 0){
+		return (bin);
+	}else{
+		if(b & 0xFF0000){
+			bin += byte2str(b>>16);
+		}
+		if (b & 0x00FF00){
+			bin += byte2str(b>>8);
+		}
+		if (b & 0x0000FF){
+			bin += byte2str(b);
+		}
+	}
+	return bin;
 }
 

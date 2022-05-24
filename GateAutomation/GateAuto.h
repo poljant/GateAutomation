@@ -7,7 +7,6 @@
 
 #ifndef GATEAUTOMATION_GATEAUTO_H_
 #define GATEAUTOMATION_GATEAUTO_H_
-//#include <String.h>
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
 #define VERSION "0.1.0 beta"
@@ -26,10 +25,11 @@ typedef unsigned int uint32_t;
 #define GATE_CLOSING2 0b010010
 #define GATE_STOP   0b10000000
 
+//clasa potrzebna do utworzenia tablicy z kodami
 class datakeys {
 	public:
-	unsigned long code;
-	uint8_t nkey;
+	unsigned long code; // kod klawisza liczba 24 bitowa
+	uint8_t nkey;  // numer klawisza 1 = A, 2 = B, 3 = C,  4 = D
 };
 
 class GateAuto {
@@ -45,29 +45,24 @@ class GateAuto {
 	uint8_t pin_RxD = 3;	//RxD
 	uint8_t pin_TxD = 1;	//TxD
 	uint8_t pin_led = 2; //GPIO2 D4
-//	bool isopen1 = false;
-//	bool openinggate1 = false;
-//	bool closinggate1 = false;
-//	bool isopen2 = false;
-//	bool openinggate2 = false;
-//	bool closinggate2 = false;
-//	bool isopenwicket = false;
+
 	bool takes = false;
 
-	int time_closing = 15; // sek
-//	int time_gateA = time_closing * 1000;
-//	int time_gateB = time_closing * 1000;
+//	int time_closing = 15; // sek
+	int duration_sek = 10;  // ile sekund trwa zamykanie i otwieranie bramy
+	int gate_duration = duration_sek * 1000;
 	int time_delay_gateA = 0 * 1000;	//msekund
 	int time_delay_gateB = 2 * 1000;	//msekund
 	int time_delay_wicket = 2 * 1000;	//msekund
-	int time_gate = time_closing * 1000;
-	int time_led = time_gate + 3000;
+	int time_gate = gate_duration;
+
+	int time_led = gate_duration + 3000;
 	int time_delay_read_code = 500; //opuźnienie kolejnego odczytu codu
 	long double time_read_code = 0;
 	long double time_current = 0;
-	long double gate_duration = 0;
-	int howmanykeys = 12;
-	datakeys buffercoderc[12];
+
+	int howmanykeys = 12;	//ile pilotów * ile klawiszy -- 3 * 4
+	datakeys buffercoderc[howmanykeys];
 	unsigned long codrcx = 0;
 	unsigned long ncodrc = 0;
 	uint8_t nkeyx = 0;
@@ -106,8 +101,8 @@ void closegate2();
 uint8_t stategate2();
 bool bellon();
 void stop();
-void pause();
-void start();
+//void pause();
+//void start();
 bool statebutton();
 void gateloop();
 void openwicket();
@@ -129,10 +124,9 @@ void sendcodeB();
 void sendcodeC();
 void sendcodeD();
 uint8_t serchcodes(unsigned long code);
-//void clickdev1();
 const char bin2str(unsigned long t);
 const char byte2str(uint8_t t);
-const char str2bin(unsigned long s);
+
 };
 
 #endif /* GATEAUTOMATION_GATEAUTO_H_ */

@@ -34,11 +34,15 @@ GateAuto::~GateAuto() {
 }
 void GateAuto::begin() {
 	rel1A.begin(pin_gate1A);
+	rel1A.setOff();
 	rel1B.begin(pin_gate1B);
+	rel1B.setOff();
 	rel2A.begin(pin_gate2A);
+	rel2A.setOff();
 	rel2B.begin(pin_gate2B);
+	rel2B.setOff();
 	relw.begin(pin_wicket);
-	relled.begin(pin_led, true); //reverse in testing
+	relled.begin(pin_led); //reverse in testing
 	myrc.enableReceive(pin_RF_Rx);
 	myrc.enableTransmit(pin_RF_Tx);
 	myrc.setPulseLength(400);
@@ -73,24 +77,24 @@ void GateAuto::addcodesrc() {
 	buffercoderc[3].code = codekeyx;
 	buffercoderc[3].nkey = 4;  //key D
 
-//dodaj kody szczytane z pilota nieprogramowalnego
-	buffercoderc[4].code = codekeyA1;
-	buffercoderc[4].nkey = 1;
-	buffercoderc[5].code = codekeyB1;
-	buffercoderc[5].nkey = 2;
-	buffercoderc[6].code = codekeyC1;
-	buffercoderc[6].nkey = 3;
-	buffercoderc[7].code = codekeyD1;
-	buffercoderc[7].nkey = 4;
-
-/*	buffercoderc[8].code = 0;
-	buffercoderc[8].nkey = 1;
-	buffercoderc[9].code = 0;
-	buffercoderc[9].nkey = 2;
-	buffercoderc[10].code = 0;
-	buffercoderc[10].nkey = 3;
-	buffercoderc[11].code = 0;
-	buffercoderc[11].nkey = 4;*/
+//dodaj kody odczytane z pilota nieprogramowalnego
+	buffercoderc[4].code = 6115587; //0b10111010101000100000011
+	buffercoderc[4].nkey = 1;	//key A
+	buffercoderc[5].code = 6115776; //0b10111010101000111000000
+	buffercoderc[5].nkey = 2;	//key B
+	buffercoderc[6].code = 6115632; //0b10111010101000100110000
+	buffercoderc[6].nkey = 3;	//key C
+	buffercoderc[7].code = 6115596; //0b10111010101000100001100
+	buffercoderc[7].nkey = 4;	//key D
+	//	kody pilota z przyciskami A i B
+	buffercoderc[8].code = 201987;	// - 0b000000110001010100000011;
+	buffercoderc[8].nkey = 1;	//key A
+	buffercoderc[9].code = 202176;	// - 0b000000110001010111000000;
+	buffercoderc[9].nkey = 2;	//key B
+	buffercoderc[10].code = 4149251;	//0b1111110101000000000011
+	buffercoderc[10].nkey = 1;
+	buffercoderc[11].code = 4149440;	//0b1111110101000011000000
+	buffercoderc[11].nkey = 2;
 //	DEBUG_MSG_PROG("[GATE] Start addcodesrc() \n\r");
 }
 
@@ -101,7 +105,7 @@ void GateAuto::opengate1() {
 	rel1A.setOn();
 	rel1B.setOff();
 //	currentstate = GATE_OPENING1;
-//	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
+	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate1() {
 // włącz LED
@@ -110,7 +114,7 @@ void GateAuto::closegate1() {
 	rel1A.setOff();
 	rel1B.setOn();
 //	currentstate = GATE_CLOSING1;
-//	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
+	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::opengate2() {
 // włącz LED
@@ -120,8 +124,9 @@ void GateAuto::opengate2() {
 	rel2B.setOff();
 	if (nkey == 2){
 	currentstate = GATE_OPENING2;
-	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
+
 	}
+	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate2() {
 // włącz LED
@@ -131,8 +136,9 @@ void GateAuto::closegate2() {
 	rel2B.setOn();
 	if (nkey == 2){
 	currentstate = GATE_CLOSING2;
-	DEBUG_MSG_PROG("[GATE] Start closegate2()currentstate = %d \n\r", currentstate);
-}
+
+	}
+	DEBUG_MSG_PROG("[GATE] Start closegate2() currentstate = %d \n\r", currentstate);
 }
 bool GateAuto::bellon() {
 
@@ -141,28 +147,30 @@ bool GateAuto::bellon() {
 uint8_t GateAuto::stategate() {
 	return currentstate;
 }
-uint8_t GateAuto::stategate1() {
+/*uint8_t GateAuto::stategate1() {
 
 	return currentstate1;
 
 }
 uint8_t GateAuto::stategate2() {
 	return currentstate2;
-}
+}*/
 bool GateAuto::statebutton() {
 	return false;
 }
-void GateAuto::start() {
+/*void GateAuto::start() {
 	DEBUG_MSG_PROG("[GATE] Start() \n\r");
 }
 void GateAuto::pause() {
 	DEBUG_MSG_PROG("[GATE] Pause() \n\r");
-}
+}*/
 
 
 unsigned long GateAuto::readcoderc() {
+	service = true;
 	ncodrc = myrc.getReceivedValue();
 	myrc.resetAvailable();
+	service = false;
 	return ncodrc;
 }
 void GateAuto::readcodercx() {
@@ -170,7 +178,9 @@ void GateAuto::readcodercx() {
 	myrc.resetAvailable();
 }
 void GateAuto::sendcoderc(unsigned long code) {
+	service = true;
 	myrc.send(code, 24);
+	service = false;
 }
 void GateAuto::sendcodeA() {
 	sendcoderc(buffercoderc[0].code);
@@ -184,20 +194,25 @@ void GateAuto::sendcodeC() {
 void GateAuto::sendcodeD() {
 	sendcoderc(buffercoderc[3].code);;
 }
+unsigned long GateAuto::addduration(){
+	return millis() + gate_duration;
+}
 bool GateAuto::addcoderc(unsigned long code, uint8_t key) {
 	uint8_t i;
-	for (i = 4; i <= howmanykeys; i++) {
+	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = code;
 			buffercoderc[i].nkey = key;
+			DEBUG_MSG_PROG("[GATE] adding code number %d \n\r", i);
 			return true;
 		}
 	}
+	DEBUG_MSG_PROG("[GATE] Error adding code number %d \n\r", i);
 	return false;
 }
 bool GateAuto::addcodercA() {
 	uint8_t i;
-	for (i = 4; i <= howmanykeys; i++) {
+	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 1;
@@ -208,7 +223,7 @@ bool GateAuto::addcodercA() {
 }
 bool GateAuto::addcodercB() {
 	uint8_t i;
-	for (i = 4; i <= howmanykeys; i++) {
+	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 2;
@@ -219,7 +234,7 @@ bool GateAuto::addcodercB() {
 }
 bool GateAuto::addcodercC() {
 	uint8_t i;
-	for (i = 4; i <= howmanykeys; i++) {
+	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 3;
@@ -230,7 +245,7 @@ bool GateAuto::addcodercC() {
 }
 bool GateAuto::addcodercD() {
 	uint8_t i;
-	for (i = 4; i <= howmanykeys; i++) {
+	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 4;
@@ -242,7 +257,7 @@ bool GateAuto::addcodercD() {
 bool GateAuto::clearcodesrc() {
 	//kasuje wszystkie kody rc oprócz 4 pierwszych
 	uint8_t i;
-	for (i = 4; i < howmanykeys; i++) {
+	for (i = 4; i < HOWMANYKEYS; i++) {
 		buffercoderc[i].code = 0;
 		buffercoderc[i].nkey = 0;
 	}
@@ -250,7 +265,7 @@ bool GateAuto::clearcodesrc() {
 }
 bool GateAuto::clearcoderc(uint8_t ncode) {
 	//kasuje kod na podanym miejscu. Nie można skasować 4 pierwszych
-	if (ncode < 4 and ncode > howmanykeys)
+	if (ncode < 4 and ncode > HOWMANYKEYS)
 		return false;
 	buffercoderc[ncode].code = 0;
 	buffercoderc[ncode].nkey = 0;
@@ -262,7 +277,7 @@ unsigned long GateAuto::viewcoderc(uint8_t ncode) {
 void GateAuto::openwicket() {
 	DEBUG_MSG_PROG("[GATE] Start openwicket() opening\n\r");
 	relw.setOn();
-	delay(time_delay_wicket);
+	delay(duration_on_wicket);
 	relw.setOff();
 	DEBUG_MSG_PROG("[GATE] Start openwicket() open\n\r");
 }
@@ -280,23 +295,27 @@ void GateAuto::opengate() {
 // włącz LED
 	relled.setOn();
 //otwórz oba skrzydła bramy
-	opengate2();
-//	delay (time_gateB*1000);
-	opengate1();
 	currentstate = GATE_OPENING;
+	opengate2();
+	delay (time_delay_gateB);
+	opengate1();
+
 	DEBUG_MSG_PROG("[GATE] Start opengate() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate() {
 // włącz LED
 	relled.setOn();
 //zamknij oba skrzydła bramy
+	currentstate = GATE_CLOSING;
 	closegate1();
 	delay(time_delay_gateB);
 	closegate2();
-	currentstate = GATE_CLOSING;
+
 	DEBUG_MSG_PROG("[GATE] Start closegate() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::gateloop() {
+	if (service) return;  // gdy programowanie lub inne prace serwisowe, to wyłącz pętle gateloop()
+
 	//czekaj aż minie czas od ostatniego naciśnięcia klawisza na pilocie
 	if (time_read_code <= millis()) {
 		readcodercx();
@@ -311,7 +330,7 @@ void GateAuto::gateloop() {
 			nkeyx = serchcodes(codrc);
 			DEBUG_MSG_PROG("[GATE_LOOP] Coderc %ld, nkey = %d  \n\r", codrc,
 					nkeyx);
-			time_read_code = millis() + time_delay_read_code;
+			time_read_code =  millis() + time_delay_read_nex_code;
 		}
 	}
 
@@ -327,7 +346,7 @@ void GateAuto::gateloop() {
 				closegate();
 //				currentstate = GATE_CLOSING;
 				//opengate();
-				time_current = millis() + gate_duration;
+				time_current = addduration(); //	millis() + gate_duration;
 				break;
 			} else{
 				//gdy stop był w czasie zamykania, to otwórz
@@ -335,7 +354,7 @@ void GateAuto::gateloop() {
 						opengate();
 //						currentstate = GATE_OPENING;
 						//closegate();
-						time_current = millis() + gate_duration;
+						time_current = addduration(); //millis() + gate_duration;
 						break;
 					}
 					break;
@@ -345,11 +364,13 @@ void GateAuto::gateloop() {
 		// gdy brama zamknięta i wciśnięto key A to otwórz
 		if (currentstate == GATE_CLOSE) {
 			opengate();
+			time_current = addduration(); //millis() + gate_duration;
 			break;
 		}
 		//gdy brama otwarta i wciśnięto key A to zamknij
 		if (currentstate == GATE_OPEN) {
 			closegate();
+			time_current = addduration(); //millis() + gate_duration;
 			break;
 		}
 
@@ -377,14 +398,14 @@ void GateAuto::gateloop() {
 			if (currentstate == GATE_CLOSING2) {
 				opengate2();
 				currentstate = GATE_OPENING2;
-				time_current = millis() + gate_duration;
+				time_current = addduration(); //millis() + gate_duration;
 				break;
 			} else {
 				//gdy stop był w czasie otwierania, to zamknij
 				if (currentstate == GATE_OPENING2) {
 					closegate2();
 					currentstate = GATE_CLOSING2;
-					time_current = millis() + gate_duration;
+					time_current = addduration(); //millis() + gate_duration;
 					break;
 				}
 				break;
@@ -393,24 +414,26 @@ void GateAuto::gateloop() {
 		// gdy brama zamknięta i wciśnięto key B to otwórz
 		if (currentstate == GATE_CLOSE) {
 			opengate2();
+			time_current = addduration(); //millis() + gate_duration;
 			break;
 		}
 		//gdy brama otwarta i wciśnięto key B to zamknij
 		if (currentstate == GATE_OPEN) {
 			closegate2();
+			time_current = addduration(); //millis() + gate_duration;
 			break;
 		}
 
 		// gdy w czasie zamykania wcisnięto key B to wstrzymaj zamykanie
 		if (currentstate == GATE_CLOSING2) {
 			stop();
-			time_current += gate_duration;
+			time_current += gate_duration;  //przedłuż czas świecenia LED
 			break;
 		}
 		// gdy w czasie otwierania wcisnięto key B to wstrzymaj otwieranie
 		if (currentstate == GATE_OPENING2) {
 			stop();
-			time_current += gate_duration;
+			time_current += gate_duration;	//przedłuż czas świecenia LED
 			break;
 		}
 		break;
@@ -429,52 +452,61 @@ void GateAuto::gateloop() {
 		break;
 
 	};
+	//gdy nie trwa zamykanie lub otwieranie bramy (takes == false) i zmienił się status bieżący bramy (currentstate > 0)
+	// to ustal czas trwania działania bramy (time_current + bieżący czas + gate_duration) i ustaw, że trwa działanie bramy (takes = true)
 	if (!takes and (currentstate > 0) and (time_current < millis())) {
-		time_current = millis() + gate_duration;
+		time_current = addduration(); //millis() + gate_duration;
 		takes = true;
 	};
+	//gdy trwa działanie bramy, to sprawdź czy czas minoł
 	if (takes and (time_current < millis())) {
-		takes = false;
+		takes = false;	//zaznacz , że działanie ustało
+		//gdy trwa stan stop
 		if (currentstate & GATE_STOP) {
-			time_current = millis() + gate_duration;
-		} else {
+			time_current = addduration(); //millis() + gate_duration; //zwiększ czas trwania
+		} else { //jeśli nie to wyłącz przekaźniki bramy
 			rel1A.setOff();
 			rel1B.setOff();
 			rel2A.setOff();
 			rel2B.setOff();
-
+			//gdy brama 2 była otwierana, to zaznacz, że brama 2 została otwarta
 			if (currentstate == GATE_OPENING2) {
 				currentstate = GATE_OPEN;
 				DEBUG_MSG_PROG(
-						"[GATE_LOOP] Bramam2 została otwarta.Currentstate = %d \n\r",
+						"[GATE_LOOP] Bramam2 została otwarta. Currentstate = %d \n\r",
 						currentstate);
 				// wyłącz LED
-				relled.setOff();
+				//relled.setOff();
 			}
+			//gdy brama 2 była zamykana, to zaznacz, że brama 2 została zamknięta
 			if (currentstate == GATE_CLOSING2) {
 				currentstate = GATE_CLOSE;
 				DEBUG_MSG_PROG(
-						"[GATE_LOOP] Bramam2 została zamknięta.Currentstate = %d \n\r",
+						"[GATE_LOOP] Bramam2 została zamknięta. Currentstate = %d \n\r",
 						currentstate);
 				// wyłącz LED
-				relled.setOff();
+				//relled.setOff();
 			}
+			//gdy brama była otwierana, zaznacz, że brama została otwarta
 			if (currentstate == GATE_OPENING) {
 				currentstate = GATE_OPEN;
 				DEBUG_MSG_PROG(
-						"[GATE_LOOP] Bramam została otwarta.Currentstate = %d \n\r",
+						"[GATE_LOOP] Bramam została otwarta. Currentstate = %d \n\r",
 						currentstate);
 				// wyłącz LED
-				relled.setOff();
+				//relled.setOff();
 			}
+			//gdy brama była zamykana, to zaznacz, że brama została zamknięta
 			if (currentstate == GATE_CLOSING) {
 				currentstate = GATE_CLOSE;
 				DEBUG_MSG_PROG(
-						"[GATE_LOOP] Bramam została zamknięta.Currentstate = %d \n\r",
+						"[GATE_LOOP] Bramam została zamknięta. Currentstate = %d \n\r",
 						currentstate);
 				// wyłącz LED
-				relled.setOff();
+				//relled.setOff();
 			}
+			// wyłącz LED
+			relled.setOff();
 		}
 
 	};
@@ -486,7 +518,7 @@ uint8_t GateAuto::serchcodes(unsigned long code) {
 		return 0;
 	};
 	//sprawdź dozwolone kody klawisza
-	for (int i = 0; i < howmanykeys; i++) {
+	for (int i = 0; i < HOWMANYKEYS; i++) {
 		codrcx = buffercoderc[i].code;
 		if (codrcx == code) {
 			uint8_t	nk = buffercoderc[i].nkey;

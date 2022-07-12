@@ -14,13 +14,14 @@
 #include <LittleFS.h>
 #include "WiFiManager.h"
 #include "../GateAutomation/GateAuto.h"
+#include "../GateAutomation/WebPages.h"
 //#include <ESPAsyncTCP.h>
 //#include "../lib/ESPAsyncWebServer/src/ESPAsyncWebServer.h"
 
 String version = VERSION;
-bool eraseSetWiFi = false;
-unsigned long aptime;
-unsigned long apminutes = 10;
+bool eraseSetWiFi = false; //true kasuje dane WiFi
+unsigned long apduration;	//czas trwania stanu AP
+unsigned long apminutes = 10; //ile minut ma trwać stan AP
 #define ID_DEV1 "BELL"
 
 #ifdef IP_STATIC
@@ -111,7 +112,7 @@ void clickdev(Button2 &btn) {
 void setup() {
 	WiFi.mode(WIFI_STA);
 	Serial.begin(115200);
-	  // Initialize LittleFS
+	//Initialize LittleFS;
 	  if(!LittleFS.begin()){
 		  DEBUG_MSG_PROG("[SETUP] Wystąpił błąd podczas montowania LittleFS");
 	    return;
@@ -128,7 +129,7 @@ void setup() {
 	Serial.println(hostname());
 	Serial.println(WiFi.localIP());
 	Serial.println(WiFi.macAddress());
-	aptime = fminutes(apminutes);
+	apduration = fminutes(apminutes);
 }
 
 // the loop function runs over and over again forever
@@ -139,9 +140,9 @@ void loop() {
 	ga.gateloop();
 	if (WiFi.status() != WL_CONNECTED) {
 		WiFi.mode(WIFI_AP_STA); //tryb AP+STATION
-		aptime = fminutes(apminutes);  // licz czas trwania AP po połaczeniu
+		apduration = fminutes(apminutes);  // licz czas trwania AP po połaczeniu
 	} else {
-		if (aptime <= millis()) { // gdy minął czas trwania AP przełącz na STATION
+		if (apduration <= millis()) { // gdy minął czas trwania AP przełącz na STATION
 			WiFi.mode(WIFI_STA); //tryb STATION
 		}
 	}

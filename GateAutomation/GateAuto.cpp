@@ -7,7 +7,7 @@
 
 #include "GateAuto.h"
 #include <Arduino.h>
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
 //#ifdef BUTTON2
 //#include <Button2.h>
 //#endif
@@ -105,7 +105,7 @@ void GateAuto::opengate1() {
 	rel1A.setOn();
 	rel1B.setOff();
 //	currentstate = GATE_OPENING1;
-	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
+//	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate1() {
 // włącz LED
@@ -114,9 +114,10 @@ void GateAuto::closegate1() {
 	rel1A.setOff();
 	rel1B.setOn();
 //	currentstate = GATE_CLOSING1;
-	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
+//	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::opengate2() {
+	time_current = addduration(); //	millis() + gate_duration;
 // włącz LED
 	relled.setOn();
 //otwórz drugie skrzydło bramy
@@ -129,6 +130,7 @@ void GateAuto::opengate2() {
 	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate2() {
+	time_current = addduration(); //	millis() + gate_duration;
 // włącz LED
 	relled.setOn();
 //zamknij drugie skrzydło bramy
@@ -279,7 +281,7 @@ void GateAuto::openwicket() {
 	relw.setOn();
 	delay(duration_on_wicket);
 	relw.setOff();
-	DEBUG_MSG_PROG("[GATE] Start openwicket() open\n\r");
+//	DEBUG_MSG_PROG("[GATE] Start openwicket() open\n\r");
 }
 void GateAuto::stop() {
 	//wyłącz przekaźniki
@@ -292,6 +294,7 @@ void GateAuto::stop() {
 	DEBUG_MSG_PROG("[GATE] Stop() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::opengate() {
+	time_current = addduration(); //	millis() + gate_duration;
 // włącz LED
 	relled.setOn();
 //otwórz oba skrzydła bramy
@@ -303,6 +306,7 @@ void GateAuto::opengate() {
 	DEBUG_MSG_PROG("[GATE] Start opengate() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate() {
+	time_current = addduration(); //	millis() + gate_duration;
 // włącz LED
 	relled.setOn();
 //zamknij oba skrzydła bramy

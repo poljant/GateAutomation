@@ -9,7 +9,7 @@
 #define GATEAUTOMATION_GATEAUTO_H_
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.1.3 beta"
+#define VERSION "0.1.5 beta"
 #define IP_STATIC
 #define DEBUG
 //add manual button

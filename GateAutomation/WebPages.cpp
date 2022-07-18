@@ -4,14 +4,27 @@
  *  Created on: 5 lip 2022
  *      Author: jant
  */
+#include <ESP8266WiFi.h>
 #include "WebPages.h"
 #include "GateAuto.h"
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
+//#include "WiFiManager.h"
+//#define WEBPAGEWIFISCAN
 // login i hasło do sytemu
 const char* www_login = "admin";
 const char* www_pass = "esp8266";
+const char* ssid;
+const char* pass;
+const char* xpass;
+const char* xssid;
+const char* modes[] = { "NULL", "STA", "AP", "STA+AP" };
+const char* phymodes[] = { "", "B", "G", "N" };
+const char* encrypType[] = { "OPEN","WEP", "WPA","WPA", "WPA2", "WEP", "WPA_WPA2","OPEN", "WPA/WPA2/PSK" }; //??????
 extern GateAuto ga;
+//extern WiFiManager wm;
 const int port = 80;                 // port serwera www
-ESP8266WebServer server(port);
+ESP8266WebServer httpserver(port);
 ESP8266HTTPUpdateServer httpUpdate;
 const char HTML_TITLE[] PROGMEM = "Gate Automation";
 const char HTML_HEADER[] PROGMEM =
@@ -21,6 +34,7 @@ const char HTML_HEADER[] PROGMEM =
 		"<title> %s </title>"
 		"<meta charset=\"utf-8\">"
 		"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+//		"<meta http-equiv=\"refresh\" content=\"5\">"
 		"<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\" >"
 		"</head>"
 		"<body style=\"text-align: center;color: white; background: black;font-size: 1.5em;\">"
@@ -32,79 +46,41 @@ const char HTML_FOOTER[] PROGMEM =
 		"<p>Jan Trzciński &copy; 2021 VII Ver. %s</p></td></tr></body></html>"
 		"</body>"
 		"</html>";
+const char HTML_PAGE1[] PROGMEM =
+		"<h1> %s </h1>"
+		"<p><a href = \"/go\"><button class=\"btn btn-info\">Otwórz brame.</button></a></p>"
+		"<p><a href = \"/gc\"><button class=\"btn btn-info\">Zamknij brame.</button></a></p>"
+		"<p><a href = \"/glo\"><button class=\"btn btn-info\">Otwórz skrzydło bramy.</button></a></p>"
+		"<p><a href = \"/glc\"><button class=\"btn btn-info\">Zamknij skrzydło bramy.</button></a></p>"
+		"<p><a href = \"/wo\"><button class=\"btn btn-info\">Otwórz furtke.</button></a></p>"
+		;
+//const char HTMLSTATUS[] PROGMEM =
+//		"<h1> %s </h1>"
+		;
 const char HTML_ADDING_KEY[] PROGMEM = "<h1> DODAWANIE PILOTA </h1> ";
 const char HTML_PROGRAMING_KEY[] PROGMEM = "<h1> PROGRAMOWANIE PILOTA </h1> ";
 const char HTML_PUSH_KEY[] PROGMEM = "<p>Wciśnij klawisz %c na pilocie</p>";
 const char KEYS[] PROGMEM = "ABCD";
-/*
-const char HTML_WIFISCAN[] PROGMEM  =
-		"<table  align=\"center\" border=\"2\" >"
-		"<thead ><tr><th> </th><th style = \"text-align: center;\">SSID</th>"
-		"<th>kanał</th><th style = \"text-align: center;\">MAC</th>"
-#ifdef POLISH
-
-		"<th style = \"text-align: center;\">RSSI</th><th>zabezp</th><th>ukryta</th><tr></thead><tbody>";
-#else
-
-		"<th style = \"text-align: center;\">RSSI</th><th>encryption</th><th>hidden</th><tr></thead><tbody>";
-#endif
-
-const char HTML_WIFISCAN_TAB[] PROGMEM  = "<tr><td><form action=\"/wifiset\" metod=\"post\">"
-		 "<label><input id=\"SSID\" type=\"radio\" name=\"SSID\" value=\"%s\"></label>"
-		 "</td><td>%s</td><td>%i</td><td>%s</td><td>%i dBm</td><td>%s</td><td>%s</td></tr>";
-
-const char HTML_WIFISCAN_TAB_END[] PROGMEM  = "</tbody></table><div><p></p> </div>";
-
-const char HTML_WIFISCAN1[] PROGMEM  =
-#ifdef POLISH
-		"<p>Jesteś połączony z siecią </p>"
-#else
-		"<p>Connected with WiFi </p>"
-#endif
-		"<table align=\"center\" border=\"2\" ><tbody>"
-		"<thead ><tr><th style = \"text-align: center;\">SSID</th>"
-#ifdef POLISH
-		"<th>kanał</th><th style = \"text-align: center;\">MAC</th>"
-#else
-		"<th>channel</th><th style = \"text-align: center;\">MAC</th>"
-#endif
-		"<th style = \"text-align: center;\">RSSI</th></thead><tbody>"
-		"<td>%s</td><td>%i</td><td>%s</td><td>%i dBm</td></tbody></table>"
-		"<label>IP: %s</label>"
-#ifdef POLISH
-		"<p>Aby zmienić sieć WiFi.</p>";
-#else
-		"<p>To change the WiFi network.</p>";
-#endif
-
-const char HTML_WIFISCAN1A[] PROGMEM  =
-#ifdef POLISH
-		 "<p>Brak połączenia z siecią WiFi.</p>"
-#else
-		 "<p>No connection with WiFi.</p>"
-#endif
-		 "<label>IP AP: %s</label>";
 
 
-const char HTML_WIFISCAN1B[] PROGMEM  =
-#ifdef POLISH
-		"<p>Wybierz sieć powyżej i podaj hasło</p>"
-		"<label for=\"password\">Hasło do WiFi:</label>"
-#else
-		"<p>Select the WiFi network above and enter the password</p>"
-		"<label for=\"password\">WiFi password:</label>"
-#endif
-		"<input style=\"color: black;\" type=\"password\" name=\"password\" />"
-#ifdef POLISH
-		"<input style=\"text-align: center;color: black;\" type=\"submit\" value=\"Połącz z WiFi.\"/></form>"
-		"<p><a href = \"/wifiscan\"><button class=\"btn btn-info\">Skanuj ponownie</button></a></p>"
-		"<p><a href = \"/\"><button class=\"btn btn-info\">Strona główna</button></a></p>";
-#else
-		"<input style=\"text-align: center;color: black;\" type=\"submit\" value=\"Connect.\"/></form>"
-		"<p><a href = \"/wifiscan\"><button class=\"btn btn-info\">Scan again</button></a></p>"
-		"<p><a href = \"/\"><button class=\"btn btn-info\">Home</button></a></p>";
-#endif
-*/
+		// funkcja zamieniająca adres IP na string
+//convert IP to String
+String IPtoStr(IPAddress IP) {
+	String result;
+	for (int i = 0; i < 4; ++i) {
+		result += String(IP[i]);
+		if (i < 3)
+			result += '.';
+	}
+	return result;
+}
+//covert IP to char
+char* IPtoChar(int ip) {
+	char *ip_str = new char[16];
+	sprintf(ip_str, "%d.%d.%d.%d", (ip) & 0xFF, (ip >> 8) & 0xFF,
+			(ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+	return ip_str;
+}
 
 String HTMLHeader() {           //  nagłówek strony //Header page
 
@@ -123,112 +99,153 @@ String HTMLFooter() {             //  stopka strony www  //foot page
 	sprintf_P(buff, HTML_FOOTER, VERSION);
 	return buff;
 }
+String HTMLPage1() {             //  stopka strony www  //foot page
+///	char *text[32];
+	char *buff = new char[sizeof(HTML_PAGE1) + 32];
+	switch (ga.currentstate ){
+	case GATE_OPEN:
+		if (ga.nkey == 2) {
+		sprintf_P(buff, HTML_PAGE1, PSTR("SKRZYDŁO BRAMY OTWARTE"));
+		}else{
+			sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA OTWARTA"));
+		}
+		break;
+	case GATE_CLOSE:
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA ZAMKNIĘTA"));
+		break;
+	case GATE_OPENING:
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST OTWIERANA"));
+		break;
+	case GATE_CLOSING:
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZAMYKANE"));
+		break;
+	case GATE_OPENING2:
+		sprintf_P(buff, HTML_PAGE1, PSTR("SKRZYDŁO BRAMY JEST OTWIERANE"));
+		break;
+	case GATE_CLOSING2:
+		sprintf_P(buff, HTML_PAGE1, PSTR("SKRZYDŁO BRAMY JEST ZAMYKANE"));
+		break;
+	case GATE_STOP:
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZATRZYMANA"));
+		break;
+	default:
+		sprintf_P(buff, HTML_PAGE1,PSTR("BRAMA XXX "));
+};
+	return buff;
+}
 String WebPage() {       // połącz wszystkie części strony www
- return (HTMLHeader()+HTMLPage1()+ HTMLPage2()+HTMLFooter());
+ return (HTMLHeader()+HTMLPage1()+HTMLFooter());
 }
 // funkcja ustawia wszystkie strony www
 void setservers() {
-	httpUpdate.setup(&server, "/update", www_login, www_pass); // umożliwia aktualizację poprzez WiFi
+	httpUpdate.setup(&httpserver, "/update", www_login, www_pass); // umożliwia aktualizację poprzez WiFi
 
-	server.on("/", []() {
-		server.send(200, "text/html", WebPage());
+	httpserver.on("/", []() {
+		httpserver.send(200, "text/html", WebPage());
 	});
 
-	server.on("/gc", []()     //  zamknij brame
+	httpserver.on("/gc", []()     //  zamknij brame
 			{
-
+				ga.nkey = 1;
 				ga.closegate();
-				server.send(200, "text/html", WebPage());
+				ga.nkey = 0;
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/go", []()      // otwórz brame
+	httpserver.on("/go", []()      // otwórz brame
 			{
-
+				ga.nkey = 1;
 				ga.opengate();
-				server.send(200, "text/html", WebPage());
+				ga.nkey = 0;
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/gcb", []()     // zamknij skrzydło bramy
+	httpserver.on("/glc", []()     // zamknij skrzydło bramy
 			{
-
+				ga.nkey = 2;
 				ga.closegate2();
-				server.send(200, "text/html", WebPage());
+	//			ga.nkey = 0;
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/gob", []()      // otwórz skrzydło bramy
+	httpserver.on("/glo", []()      // otwórz skrzydło bramy
 			{
+				ga.nkey = 2;
 				ga.opengate2();
-				server.send(200, "text/html", WebPage());
+	//			ga.nkey = 0;
+				httpserver.send(200, "text/html", WebPage());
 			});
-	server.on("/wo", []()     // otwórz furtke
+	httpserver.on("/wo", []()     // otwórz furtke
 			{
+				ga.nkey = 3;
 				ga.openwicket();
-				server.send(200, "text/html", WebPage());
+				ga.nkey = 0;
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/sca", []()      // wyślij kod klawisza A
+	httpserver.on("/sca", []()      // wyślij kod klawisza A
 			{
-				server.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(0));
+		httpserver.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(0));
 				ga.sendcodeA();
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/scb", []()      // wyślij kod klawisza B
+	httpserver.on("/scb", []()      // wyślij kod klawisza B
 			{
-				server.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(1));
+				httpserver.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(1));
 				ga.sendcodeB();
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/scc", []()      // wyślij kod klawisza C
+	httpserver.on("/scc", []()      // wyślij kod klawisza C
 			{
-				server.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(2));
+				httpserver.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(2));
 				ga.sendcodeC();
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/scd", []()      //wyślij kod klawisza D
+	httpserver.on("/scd", []()      //wyślij kod klawisza D
 			{
-				server.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(3));
+				httpserver.send(200, "text/html", HTML_PROGRAMING_KEY+HTML_Push_Key(3));
 				ga.sendcodeD();
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/aca", []()      //dodaj kod klawisza A
+	httpserver.on("/aca", []()      //dodaj kod klawisza A
 			{
-				server.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(0));
+				httpserver.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(0));
 				ga.addcoderc(ga.readcoderc(),0);
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/acb", []()      //dodaj kod klawisza B
+	httpserver.on("/acb", []()      //dodaj kod klawisza B
 			{
-				server.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(1));
+				httpserver.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(1));
 				ga.addcoderc(ga.readcoderc(),1);
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/acc", []()      //dodaj kod klawisza C
+	httpserver.on("/acc", []()      //dodaj kod klawisza C
 			{
-				server.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(2));
+				httpserver.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(2));
 				ga.addcoderc(ga.readcoderc(),2);
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/acd", []()      //dodaj kod klawisza d
+	httpserver.on("/acd", []()      //dodaj kod klawisza d
 			{
-				server.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(3));
+				httpserver.send(200, "text/html", HTML_ADDING_KEY+HTML_Push_Key(3));
 				ga.addcoderc(ga.readcoderc(),3);
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.on("/save", []()      // zapisz zmiany ustawień
+	httpserver.on("/save", []()      // zapisz zmiany ustawień
 			{
 				//	   saveEEProm();
-				server.send(200, "text/html", WebPage());
+				httpserver.send(200, "text/html", WebPage());
 			});
 
-	server.begin();                // Start serwera www
+	httpserver.begin();                // Start serwera www
 #ifdef DEBUG
 	Serial.println("Server started");
 #endif

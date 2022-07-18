@@ -8,29 +8,28 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
 #include "secrets.h"
 #include "debug.h"
 #include <Button2.h>
 #include <LittleFS.h>
-#include "WiFiManager.h"
 #include "../GateAutomation/GateAuto.h"
 #include "../GateAutomation/WebPages.h"
-//#include <ESPAsyncTCP.h>
-//#include "../lib/ESPAsyncWebServer/src/ESPAsyncWebServer.h"
+#include "WiFiManager.h"
 
 String version = VERSION;
 bool eraseSetWiFi = false; //true kasuje dane WiFi
 unsigned long apduration;	//czas trwania stanu AP
 unsigned long apminutes = 10; //ile minut ma trwać stan AP
 #define ID_DEV1 "BELL"
-
+extern ESP8266WebServer httpserver;
 #ifdef IP_STATIC
 IPAddress IPadr(10, 110, 3, 33); // stały IP
 IPAddress netmask(255, 255, 0, 0);
 IPAddress gateway(10, 110, 0, 1);
 //////////////////////////////
 #endif
-
+WiFiManager wm;
 // Create AsyncWebServer object on port 80
 //AsyncWebServer server(80);
 //Button2 buttondevice;
@@ -84,18 +83,22 @@ const char *ap_ssid = hostname().c_str();   // SSID AP
 const char *ap_pass = "12345678";  // password do AP
 int ap_channel = 7; //numer kanału dla AP
 void setwifi(bool erase) {
-#include <WiFiManager.h>
-	WiFiManager wifiManager;
+//#include <WiFiManager.h>
+//	WiFiManager wm;
 	if (erase) {
-		wifiManager.resetSettings();
-
+		wm.resetSettings();
 	}
 #ifdef IP_STATIC
-	wifiManager.setSTAStaticIPConfig(IPadr, gateway, netmask);
-	WiFi.config(IPadr, gateway, netmask);  // stały IP
+	wm.setSTAStaticIPConfig(IPadr, gateway, netmask);
+//	WiFi.config(IPadr, gateway, netmask);  // stały IP
 #endif
-	wifiManager.autoConnect(hostname().c_str());
-	delay(100);
+	wm.autoConnect(hostname().c_str());
+	  delay(100);
+#ifdef IP_STATIC
+//  WiFi.config(IPadr,gateway,netmask);  // stały IP
+#endif
+//  WiFi.mode(WIFI_STA); //tryb STATION
+  WiFi.begin(myssid, mypass);
 }
 #ifdef BUTTON2
 Button2 buttondevice;
@@ -117,19 +120,26 @@ void setup() {
 		  DEBUG_MSG_PROG("[SETUP] Wystąpił błąd podczas montowania LittleFS");
 	    return;
 	  }
-
+/*		WiFiManager wifiManager;
+#ifdef IP_STATIC
+	wifiManager.setSTAStaticIPConfig(IPadr, gateway, netmask);
+	WiFi.config(IPadr, gateway, netmask);  // stały IP
+#endif
+		wifiManager.autoConnect(hostname().c_str());*/
 	setwifi(false); //eraseSetWiFi);
 	ga.begin();
 	buttondevice.begin(ga.pin_button);
 //	buttondevice1.setLongClickTime(4000);
 	buttondevice.setClickHandler(clickdev);
 //	buttondevice1.setLongClickHandler(longclickdev1);
-	MDNS.begin(hostname(), WiFi.localIP());
+
 	Serial.println();
 	Serial.println(hostname());
 	Serial.println(WiFi.localIP());
 	Serial.println(WiFi.macAddress());
 	apduration = fminutes(apminutes);
+	setservers();
+	MDNS.begin(hostname(), WiFi.localIP());
 }
 
 // the loop function runs over and over again forever
@@ -146,9 +156,6 @@ void loop() {
 			WiFi.mode(WIFI_STA); //tryb STATION
 		}
 	}
+	httpserver.handleClient();
 	MDNS.update();
 }
-
-
-
-

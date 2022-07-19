@@ -117,7 +117,7 @@ String HTMLPage1() {             //  stopka strony www  //foot page
 		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST OTWIERANA"));
 		break;
 	case GATE_CLOSING:
-		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZAMYKANE"));
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZAMYKANA"));
 		break;
 	case GATE_OPENING2:
 		sprintf_P(buff, HTML_PAGE1, PSTR("SKRZYDŁO BRAMY JEST OTWIERANE"));
@@ -239,6 +239,18 @@ void setservers() {
 				httpserver.send(200, "text/html", WebPage());
 			});
 
+	httpserver.on("/autoc1", []()      // zapisz zmiany ustawień
+			{
+				ga.autoclose= true;
+				//	   saveEEProm();
+				httpserver.send(200, "text/html", WebPage());
+			});
+	httpserver.on("/autoc0", []()      // zapisz zmiany ustawień
+			{
+				ga.autoclose= false;
+				//	   saveEEProm();
+				httpserver.send(200, "text/html", WebPage());
+			});
 	httpserver.on("/save", []()      // zapisz zmiany ustawień
 			{
 				//	   saveEEProm();

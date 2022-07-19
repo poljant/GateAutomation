@@ -9,8 +9,8 @@
 #define GATEAUTOMATION_GATEAUTO_H_
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.1.5 beta"
-#define IP_STATIC
+#define VERSION "0.1.6 beta"
+//#define IP_STATIC
 #define DEBUG
 //add manual button
 #define BUTTON2
@@ -48,6 +48,7 @@ class GateAuto {
 	uint8_t pin_led = 2; //GPIO2 D4
 
 	bool takes = false;	//ruch bramy trwa to true
+	bool takes_autoclose = false;	// true działa automatyczzne zamykanie bramy
 
 //	int time_closing = 15; // sek
 	int duration_sek = 10;  // ile sekund trwa zamykanie lub otwieranie bramy
@@ -74,6 +75,10 @@ public:
 	datakeys buffercoderc[HOWMANYKEYS];	//ile pilotów * ile klawiszy -- 3 * 4
 	//zmienne pamiętające status bramy
 	uint8_t currentstate = 0b0;
+	// czy brama zamykana automatycznie po określonym czasie otwarcia
+	bool autoclose = false;
+	int time_autoclose = 10 ; //  sekund
+	unsigned long curent_time_autoclose = 0;
 	//status skrzydła pierwszego bramy
 /*	uint8_t currentstate1 = 0b0;
 	//status skrzydła drugiego bramy
@@ -115,7 +120,8 @@ void openwicket();
 unsigned long readcoderc();
 void readcodercx();
 void sendcoderc(unsigned long code);
-unsigned long addduration();
+unsigned long addduration(int duration);
+unsigned long adddurationsek(int duration);
 bool addcoderc(unsigned long code, uint8_t nkey);
 void addcodesrc();
 bool addcodercA();

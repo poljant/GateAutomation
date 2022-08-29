@@ -49,7 +49,7 @@ void GateAuto::begin() {
 	//   buttondevice.begin(pin_button);
 	//   buttondevice.setClickHandler(clickdev);
 
-//	DEBUG_MSG_PROG("[GATE] Start begin()");
+	DEBUG_MSG_PROG("[GATE] Start begin()");
 	addcodesrc();
 }
 
@@ -60,23 +60,29 @@ void GateAuto::addcodesrc() {
 	//ustal kody dla pierwszego pilota programowalnego
 	//kody związane z ID chipa ESP
 	unsigned long chipId = ESP.getChipId();
-	unsigned long chipIdx = chipId << 8;
-	unsigned long codekeyx = chipIdx & 0b00000011;
+	chipId = chipId & 0xFFFF;
+//	DEBUG_MSG_PROG("[GATE] ChipID = %ld \n\r", chipId);
+	uint32_t chipIdx = chipId << 8;
+	chipId = chipId & 0xFFFF00;
+//	DEBUG_MSG_PROG("[GATE] ChipIDx = %d \n\r", chipIdx);
+
+	uint32_t codekeyx = chipIdx + 0b00000011;
+//	DEBUG_MSG_PROG("[GATE] codekeyx = %d \n\r", codekeyx);
 	buffercoderc[0].code = codekeyx;
 	buffercoderc[0].nkey = 1; //key A
-
-	codekeyx = chipIdx & 0b11000000;
+//	DEBUG_MSG_PROG("[GATE] Code A = %d \n\r", buffercoderc[0].code);
+	codekeyx = chipIdx + 0b11000000;
 	buffercoderc[1].code = codekeyx;
 	buffercoderc[1].nkey = 2; //key B
-
-	codekeyx = chipIdx & 0b00110000;
+//	DEBUG_MSG_PROG("[GATE] Code B = %d \n\r", buffercoderc[1].code);
+	codekeyx = chipIdx + 0b00110000;
 	buffercoderc[2].code = codekeyx;
 	buffercoderc[2].nkey = 3;  //key C
-
-	codekeyx = chipIdx & 0b00001100;
+//	DEBUG_MSG_PROG("[GATE] Code C = %d \n\r", buffercoderc[2].code);
+	codekeyx = chipIdx + 0b00001100;
 	buffercoderc[3].code = codekeyx;
 	buffercoderc[3].nkey = 4;  //key D
-
+//	DEBUG_MSG_PROG("[GATE] Code D = %d \n\r", buffercoderc[3].code);
 //dodaj kody odczytane z pilota nieprogramowalnego
 	buffercoderc[4].code = 6115587; //0b10111010101000100000011
 	buffercoderc[4].nkey = 1;	//key A
@@ -168,92 +174,150 @@ void GateAuto::pause() {
 }*/
 
 
-unsigned long GateAuto::readcoderc() {
+uint32_t GateAuto::readcoderc() {
 	service = true;
 	ncodrc = myrc.getReceivedValue();
 	myrc.resetAvailable();
-	service = false;
+//	service = false;
 	return ncodrc;
 }
 void GateAuto::readcodercx() {
 	ncodrc = myrc.getReceivedValue();
 	myrc.resetAvailable();
 }
-void GateAuto::sendcoderc(unsigned long code) {
+void GateAuto::sendcoderc(uint32_t code) {
 	service = true;
 	myrc.send(code, 24);
 	service = false;
 }
 void GateAuto::sendcodeA() {
+	service = true;
 	sendcoderc(buffercoderc[0].code);
+	service = false;
 }
 void GateAuto::sendcodeB() {
+	service = true;
 	sendcoderc(buffercoderc[1].code);
+	service = false;
 }
 void GateAuto::sendcodeC() {
+	service = true;
 	sendcoderc(buffercoderc[2].code);
+	service = false;
 }
 void GateAuto::sendcodeD() {
-	sendcoderc(buffercoderc[3].code);;
+	service = true;
+	sendcoderc(buffercoderc[3].code);
+	service = false;
 }
 unsigned long GateAuto::addduration(int duration){
 	return millis() + duration;
 }
+bool GateAuto::iscode(uint32_t cod){
+	if (cod <=0) return false;
+	uint8_t i;
+	for (i = 4; i <= HOWMANYKEYS; i++) {
+		if (buffercoderc[i].code == cod) {
+			//DEBUG_MSG_PROG("[GATE] Is code number %d \n\r", cod);
+			DEBUG_MSG_PROG("[GATE] Kod o tym numerze już jest %d \n\r", cod);
+			return true;
+		}
+	}
+	return false;
+}
 unsigned long GateAuto::adddurationsek(int duration){
+
 	return millis() + duration*1000;
 }
-bool GateAuto::addcoderc(unsigned long code, uint8_t key) {
+bool GateAuto::addcoderc(uint32_t code, uint8_t key) {
+	ncodrc=0;
+	if (iscode(code)){
+		//DEBUG_MSG_PROG("[GATE] such a code number is already there. code = %d \n\r", code);
+		DEBUG_MSG_PROG("[GATE] Taki kod jest już zapisany. code = %d \n\r", codrc);
+
+		return false;
+	}
 	uint8_t i;
 	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = code;
 			buffercoderc[i].nkey = key;
-			DEBUG_MSG_PROG("[GATE] adding code number %d \n\r", i);
+			//DEBUG_MSG_PROG("[GATE] adding code number %d = %d \n\r", i, code);
+			DEBUG_MSG_PROG("[GATE] Dodano kod pod numerem %d = %d \n\r", i, code);
 			return true;
 		}
 	}
-	DEBUG_MSG_PROG("[GATE] Error adding code number %d \n\r", i);
+	//DEBUG_MSG_PROG("[GATE] Error adding code number %d = %d\n\r", i, code);
+	DEBUG_MSG_PROG("[GATE] Błąd dodania kodu numer %d = %d\n\r", i, code);
 	return false;
 }
 bool GateAuto::addcodercA() {
+	ncodrc=0;
+	if (iscode(codrc)){
+//		DEBUG_MSG_PROG("[GATE] such a code number is already there. code = %d \n\r", codrc);
+		DEBUG_MSG_PROG("[GATE] Taki kod jest już zapisany. code = %d \n\r", codrc);
+		return false;
+	}
 	uint8_t i;
 	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 1;
+			codrc=0;
 			return true;
 		}
 	}
 	return false;
 }
 bool GateAuto::addcodercB() {
+	ncodrc=0;
+	if (iscode(codrc)){
+//		DEBUG_MSG_PROG("[GATE] such a code number is already there. code = %d \n\r", codrc);
+		DEBUG_MSG_PROG("[GATE] Taki kod jest już zapisany. code = %d \n\r", codrc);
+		return false;
+	}
 	uint8_t i;
 	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 2;
+			codrc=0;
 			return true;
 		}
 	}
 	return false;
 }
 bool GateAuto::addcodercC() {
+	ncodrc=0;
+	if (iscode(codrc)){
+//		DEBUG_MSG_PROG("[GATE] such a code number is already there. code = %d \n\r", codrc);
+		DEBUG_MSG_PROG("[GATE] Taki kod jest już zapisany. code = %d \n\r", codrc);
+		return false;
+	}
 	uint8_t i;
 	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 3;
+			codrc=0;
 			return true;
 		}
 	}
 	return false;
 }
 bool GateAuto::addcodercD() {
+	ncodrc=0;
+	if (iscode(codrc)){
+//		DEBUG_MSG_PROG("[GATE] such a code number is already there. code = %d \n\r", codrc);
+		DEBUG_MSG_PROG("[GATE] Taki kod jest już zapisany. code = %d \n\r", codrc);
+		return false;
+	}
 	uint8_t i;
 	for (i = 4; i <= HOWMANYKEYS; i++) {
 		if (buffercoderc[i].code == 0) {
 			buffercoderc[i].code = codrc;
 			buffercoderc[i].nkey = 4;
+			codrc=0;
 			return true;
 		}
 	}
@@ -276,7 +340,7 @@ bool GateAuto::clearcoderc(uint8_t ncode) {
 	buffercoderc[ncode].nkey = 0;
 	return true;
 }
-unsigned long GateAuto::viewcoderc(uint8_t ncode) {
+uint32_t GateAuto::viewcoderc(uint8_t ncode) {
 	return buffercoderc[ncode].code;
 }
 void GateAuto::openwicket() {
@@ -325,24 +389,25 @@ void GateAuto::gateloop() {
 
 	//czekaj aż minie czas od ostatniego naciśnięcia klawisza na pilocie
 	if (time_read_code <= millis()) {
-		readcodercx();
+		readcodercx(); //czytaj kod
 		if ((codrc != ncodrc) and (ncodrc != 0)){
 		 codrc = ncodrc;
 		 time_read_code = 0;
 		 }else{
 		 codrc = 0;
 		 }
-
+		//gdy kod odczytano
 		if (codrc > 0) {
-			nkeyx = serchcodes(codrc);
-			DEBUG_MSG_PROG("[GATE_LOOP] Coderc %ld, nkey = %d  \n\r", codrc,
+			nkeyx = serchcodes(codrc); //sprawdź czy kod dozwolony
+			DEBUG_MSG_PROG("[GATE_LOOP] Coderc %d, nkey = %d  \n\r", codrc,
 					nkeyx);
+			//ustaw opuźnienie do czytania kolejnego kodu
 			time_read_code =  millis() + time_delay_read_nex_code;
 		}
 	}
-
+	//przetwarzaj klawisz wciśnięty
 	switch (nkeyx) {
-	case 1:
+	case 1:		//gdy klawisz A
 		nkeyx = 0;
 		// gdy w czasie stop wcisnięto key A
 		if (currentstate & GATE_STOP) {
@@ -395,7 +460,7 @@ void GateAuto::gateloop() {
 		}
 		break;
 
-	case 2:
+	case 2:		//gdy klawisz B
 		nkeyx = 0;
 		// gdy w czasie stop wcisnięto key B
 		if (currentstate & GATE_STOP) {
@@ -425,7 +490,7 @@ void GateAuto::gateloop() {
 			break;
 		}
 		//gdy brama otwarta i wciśnięto key B to zamknij
-		if (currentstate == GATE_OPEN) {
+		if (currentstate == GATE_OPEN2) {
 			closegate2();
 //			time_current = addduration(gate_duration); //millis() + gate_duration;
 			break;
@@ -444,17 +509,23 @@ void GateAuto::gateloop() {
 			break;
 		}
 		break;
-	case 3:
+	case 3:		//dgy klawisz C
 		//gdy wciśnięto klawisz C to otwórz zamek furtki
 		openwicket();
 		nkeyx = 0;
 		break;
 
-	case 4:
+	case 4:		//gdy klawisz D
+		//załącz lub wyłącz autoclose
+		if (autoclose){
+			autoclose= false;
+		}else{
+			autoclose= true;
+		}
 		nkeyx = 0;
 		break;
 
-	default:
+	default: 	//gdy klawisz nieokreślony
 		nkeyx = 0;
 		break;
 
@@ -478,7 +549,7 @@ void GateAuto::gateloop() {
 			rel2B.setOff();
 			//gdy brama 2 była otwierana, to zaznacz, że brama 2 została otwarta
 			if (currentstate == GATE_OPENING2) {
-				currentstate = GATE_OPEN;
+				currentstate = GATE_OPEN2;
 				DEBUG_MSG_PROG(
 						"[GATE_LOOP] Bramam2 została otwarta. Currentstate = %d \n\r",
 						currentstate);
@@ -539,7 +610,7 @@ void GateAuto::gateloop() {
 	}
 
 }
-uint8_t GateAuto::serchcodes(unsigned long code) {
+uint8_t GateAuto::serchcodes(uint32_t code) {
 	//gdy brak kodu przerwij program
 	if (code <= 0) {
 		return 0;

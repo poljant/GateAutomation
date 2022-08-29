@@ -38,6 +38,7 @@ GateAuto ga;
 unsigned long fminutes(unsigned int ile) {
 	return (millis() + (1000 * 60 * ile));
 }
+
 ///////////////////////////////////////////
 String hostname(void) {
 	uint32_t chipId = ESP.getChipId();

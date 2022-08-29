@@ -15,6 +15,9 @@
 String HTMLHeader();
 String HTMLFooter();
 String HTMLPage();
+String HTTP_WebPage2();
+String WebPage3a(int a);
+String WebPage3(int a);
 String HTMLPage1();
 String HTMLPage2();
 String HTML_Push_Key(int nk);

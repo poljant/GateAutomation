@@ -9,14 +9,15 @@
 #define GATEAUTOMATION_GATEAUTO_H_
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.1.6 beta"
-//#define IP_STATIC
+#define VERSION "0.2.3 beta"
+#define IP_STATIC
 #define DEBUG
 //add manual button
 #define BUTTON2
 #define HOSTNAME "GateAutomation"
 #define GATE_CLOSE        0b00	//brama zamknięta
 #define GATE_OPEN   0b01000000	//brama otwarta
+#define GATE_OPEN2  0b01010000	//brama2 otwarta
 #define GATE_OPENING      0b01	//brama jest otwierana
 #define GATE_CLOSING     0b010	//brama jest zamykana
 #define GATE_OPENING1  0b01001	//brama 1 jest otwierana
@@ -29,7 +30,7 @@ typedef unsigned int uint32_t;
 //clasa potrzebna do utworzenia tablicy z kodami
 class datakeys {
 	public:
-	unsigned long code; // kod klawisza liczba 24 bitowa
+	uint32_t code; // kod klawisza liczba 24 bitowa
 	uint8_t nkey;  // numer klawisza 1 = A, 2 = B, 3 = C,  4 = D
 };
 
@@ -65,8 +66,8 @@ class GateAuto {
 
 
 
-	unsigned long codrcx = 0;
-	unsigned long ncodrc = 0;
+	uint32_t codrcx = 0;
+
 	uint8_t nkeyx = 0;
 
 public:
@@ -77,14 +78,15 @@ public:
 	uint8_t currentstate = 0b0;
 	// czy brama zamykana automatycznie po określonym czasie otwarcia
 	bool autoclose = false;
-	int time_autoclose = 10 ; //  sekund
+	int time_autoclose = 180 ; //  sekund
 	unsigned long curent_time_autoclose = 0;
 	//status skrzydła pierwszego bramy
 /*	uint8_t currentstate1 = 0b0;
 	//status skrzydła drugiego bramy
 	uint8_t currentstate2 = 0b0;*/
-	volatile unsigned long codrc = 0;
+	volatile uint32_t codrc = 0;
 	uint8_t nkey = 0;
+	uint32_t ncodrc = 0;
 	uint8_t pin_button = 0; //GPIO0 D3
 	//kody pilota nieprogramowalnego
 /*
@@ -117,12 +119,13 @@ void stop();
 bool statebutton();
 void gateloop();
 void openwicket();
-unsigned long readcoderc();
+uint32_t readcoderc();
 void readcodercx();
-void sendcoderc(unsigned long code);
+void sendcoderc(uint32_t code);
 unsigned long addduration(int duration);
 unsigned long adddurationsek(int duration);
-bool addcoderc(unsigned long code, uint8_t nkey);
+bool addcoderc(uint32_t code, uint8_t nkey);
+bool iscode(uint32_t cod);
 void addcodesrc();
 bool addcodercA();
 bool addcodercB();
@@ -130,14 +133,14 @@ bool addcodercC();
 bool addcodercD();
 bool clearcodesrc();
 bool clearcoderc(uint8_t ncode);
-unsigned long viewcoderc(uint8_t ncode);
+uint32_t viewcoderc(uint8_t ncode);
 void setcodes();
 void sendcodeA();
 void sendcodeB();
 void sendcodeC();
 void sendcodeD();
-uint8_t serchcodes(unsigned long code);
-const char bin2str(unsigned long t);
+uint8_t serchcodes(uint32_t code);
+const char bin2str(uint32_t t);
 const char byte2str(uint8_t t);
 
 };

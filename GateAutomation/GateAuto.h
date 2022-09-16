@@ -9,7 +9,7 @@
 #define GATEAUTOMATION_GATEAUTO_H_
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.2.3 beta"
+#define VERSION "0.3 beta"
 #define IP_STATIC
 #define DEBUG
 //add manual button
@@ -52,7 +52,7 @@ class GateAuto {
 	bool takes_autoclose = false;	// true działa automatyczzne zamykanie bramy
 
 //	int time_closing = 15; // sek
-	int duration_sek = 10;  // ile sekund trwa zamykanie lub otwieranie bramy
+	int duration_sek = 50;  // ile sekund trwa zamykanie lub otwieranie bramy
 	int gate_duration = duration_sek * 1000;	//czas działania ruchu bramy w milisekundach
 	int time_delay_gateA = 0 * 1000;	//msekund  opóźnienie rozpoczęcia ruchu bramy 1
 	int time_delay_gateB = 2 * 1000;	//msekund  opóźnienie rozpoczęcia ruchu bramy 2
@@ -63,6 +63,7 @@ class GateAuto {
 	int time_delay_read_nex_code = 500; //opuźnienie kolejnego odczytu codu
 	long double time_read_code = 0;
 	long double time_current = 0;	//pamięta czas liczony do końca ruchu
+
 
 
 
@@ -78,8 +79,13 @@ public:
 	uint8_t currentstate = 0b0;
 	// czy brama zamykana automatycznie po określonym czasie otwarcia
 	bool autoclose = false;
+	//gdy sygnalizacja led ma w sobie pulsator
+	bool led_pulse = false; //czy sygnalizacja led ma pulsować? tak = true, nie = false
 	int time_autoclose = 180 ; //  sekund
 	unsigned long curent_time_autoclose = 0;
+	bool ledOn = false; //czy led ma być załaczony true czy nie false
+	long double time_blink = 0; // zmienna do tworzenia migotania led
+	int led_long_pulse = 1000; //długość impulsu led w milisekundach
 	//status skrzydła pierwszego bramy
 /*	uint8_t currentstate1 = 0b0;
 	//status skrzydła drugiego bramy
@@ -142,6 +148,7 @@ void sendcodeD();
 uint8_t serchcodes(uint32_t code);
 const char bin2str(uint32_t t);
 const char byte2str(uint8_t t);
+void led_blink(int tp);
 
 };
 

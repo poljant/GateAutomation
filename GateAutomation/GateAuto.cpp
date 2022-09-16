@@ -43,6 +43,7 @@ void GateAuto::begin() {
 	rel2B.setOff();
 	relw.begin(pin_wicket);
 	relled.begin(pin_led); //reverse in testing
+	relled.setOff();
 	myrc.enableReceive(pin_RF_Rx);
 	myrc.enableTransmit(pin_RF_Tx);
 	myrc.setPulseLength(400);
@@ -106,6 +107,7 @@ void GateAuto::addcodesrc() {
 
 void GateAuto::opengate1() {
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //otwórz pierwsze skrzydło bramy
 	rel1A.setOn();
@@ -115,6 +117,7 @@ void GateAuto::opengate1() {
 }
 void GateAuto::closegate1() {
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //zamknij pierwsze skrzydło bramy
 	rel1A.setOff();
@@ -123,8 +126,10 @@ void GateAuto::closegate1() {
 //	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::opengate2() {
-	time_current = addduration(gate_duration); //	millis() + gate_duration;
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
+	time_current = 0;
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //otwórz drugie skrzydło bramy
 	rel2A.setOn();
@@ -138,6 +143,7 @@ void GateAuto::opengate2() {
 void GateAuto::closegate2() {
 	time_current = addduration(gate_duration); //	millis() + gate_duration;
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //zamknij drugie skrzydło bramy
 	rel2A.setOff();
@@ -361,8 +367,10 @@ void GateAuto::stop() {
 	DEBUG_MSG_PROG("[GATE] Stop() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::opengate() {
-	time_current = addduration(gate_duration); //	millis() + gate_duration;
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
+	time_current = 0;
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //otwórz oba skrzydła bramy
 	currentstate = GATE_OPENING;
@@ -375,6 +383,7 @@ void GateAuto::opengate() {
 void GateAuto::closegate() {
 	time_current = addduration(gate_duration); //	millis() + gate_duration;
 // włącz LED
+	ledOn = true;
 	relled.setOn();
 //zamknij oba skrzydła bramy
 	currentstate = GATE_CLOSING;
@@ -386,7 +395,13 @@ void GateAuto::closegate() {
 }
 void GateAuto::gateloop() {
 	if (service) return;  // gdy programowanie lub inne prace serwisowe, to wyłącz pętle gateloop()
-
+	//kontrola pulsowania leda sygnalizującego działanie bramy
+	if (ledOn){
+		led_blink(led_long_pulse);
+	}else{ //jeśli led ma być wyłączony to sprawdź czy wyłączony
+			// jeśli nie to wyłącz
+		if(relled.read()) relled.setOff();
+	}
 	//czekaj aż minie czas od ostatniego naciśnięcia klawisza na pilocie
 	if (time_read_code <= millis()) {
 		readcodercx(); //czytaj kod
@@ -483,6 +498,8 @@ void GateAuto::gateloop() {
 				break;
 			}
 		}
+		//DEBUG_MSG_PROG(	"[GATE_LOOP] Wciśnięto klawisz B. Currentstate = %d \n\r",
+		//						currentstate);
 		// gdy brama zamknięta i wciśnięto key B to otwórz
 		if (currentstate == GATE_CLOSE) {
 			opengate2();
@@ -584,6 +601,7 @@ void GateAuto::gateloop() {
 				//relled.setOff();
 			}
 			// wyłącz LED
+			ledOn = false;
 			relled.setOff();
 		}
 
@@ -627,4 +645,11 @@ uint8_t GateAuto::serchcodes(uint32_t code) {
 	}
 	// gdy nie znaleziono kodu
 	return 0;
+}
+void GateAuto::led_blink(int tp){
+	if (!led_pulse) return;
+	if(time_blink < millis()){
+		time_blink = millis()+tp;
+		relled.read() ? relled.setOff() : relled.setOn();
+	}
 }

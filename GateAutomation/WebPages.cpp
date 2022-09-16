@@ -415,11 +415,24 @@ void setservers() {
 				//	   saveEEProm();
 				httpserver.send(200, "text/html", WebPage());
 			});
+	httpserver.on("/lp", []()      // zmień led_pulse
+			{
+				ga.led_pulse = !ga.led_pulse;
+				//	   saveEEProm();
+				httpserver.send(200, "text/html", WebPage());
+			});
 	httpserver.on("/save", []()      // zapisz zmiany ustawień
 			{
 				//	   saveEEProm();
 				httpserver.send(200, "text/html", WebPage());
 			});
+	httpserver.on("/reboot", []()      // uruchom ponownie
+				{
+		//ESP.reset();
+		ESP.restart();
+					//	   saveEEProm();
+					httpserver.send(200, "text/html", WebPage());
+				});
 
 	httpserver.begin();                // Start serwera www
 #ifdef DEBUG

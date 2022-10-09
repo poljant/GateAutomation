@@ -7,9 +7,10 @@
 
 #ifndef GATEAUTOMATION_GATEAUTO_H_
 #define GATEAUTOMATION_GATEAUTO_H_
+
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.3 beta"
+#define VERSION "0.3.4 beta"
 #define IP_STATIC
 #define DEBUG
 //add manual button
@@ -27,6 +28,13 @@ typedef unsigned int uint32_t;
 #define GATE_STOP   0b10000000	//brama ruch bramy jest zatrzymany
 #define HOWMANYKEYS		12	// ile pilotów * ile klawiszy 3*4=12
 
+/*typedef union {
+  uint32_t data;
+  struct {
+	  uint32_t code:24;
+	  uint32_t nkey:8;
+  };
+}DATAKEY;*/
 //clasa potrzebna do utworzenia tablicy z kodami
 class datakeys {
 	public:
@@ -36,6 +44,7 @@ class datakeys {
 
 class GateAuto {
 	friend class datakeys;
+//	struct DATAKEY datakeys;
 	uint8_t pin_gate1A = 16; //GPIO16 D0
 	uint8_t pin_gate1B = 14; //GPIO14 D5
 	uint8_t pin_gate2A = 12; //GPIO12 D6

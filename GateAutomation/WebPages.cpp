@@ -152,11 +152,13 @@ String HTMLPage1() {             //   page
 }
 String HTML_WebPage1b(){
 String	buff="";
-	if(ga.currentstate==GATE_CLOSE or ga.currentstate==GATE_CLOSING2){
+//if(ga.currentstate==GATE_CLOSE or ga.currentstate==GATE_CLOSING2){
+	if(ga.currentstate==GATE_CLOSE){
 		buff = PSTR("<p><a href = \"/go\"><button class=\"btn btn-info\">Otwórz brame.</button></a></p>");
 	}else{
 		buff = PSTR("<p><a href = \"/gc\"><button class=\"btn btn-info\">Zamknij brame.</button></a></p>");}
-	if(ga.currentstate==GATE_OPEN2 or ga.currentstate==GATE_OPENING2){
+//	if(ga.currentstate==GATE_OPEN2 or ga.currentstate==GATE_OPENING2){
+	if(ga.currentstate==GATE_OPEN2){
 		buff+=PSTR("<p><a href = \"/glc\"><button class=\"btn btn-info\">Zamknij skrzydło bramy.</button></a></p>");
 	}else{
 		buff+=PSTR("<p><a href = \"/glo\"><button class=\"btn btn-info\">Otwórz skrzydło bramy.</button></a></p>");}
@@ -193,7 +195,7 @@ String HTTP_WebPage2(){
 
 String WebPage2() {       // połącz wszystkie części strony www
 //	DEBUG_MSG_PROG("[GATE WEB] WebPage2 \n\r");
- return (HTTP_Header2()+HTTP_WebPage2()+HTMLFooter());
+ return (HTTP_Header2()+HTTP_WebPage2()+HTMLFooter1());
 }
 String WebPage3x(int a){
 	String buff;

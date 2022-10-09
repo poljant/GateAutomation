@@ -141,7 +141,7 @@ void GateAuto::opengate2() {
 	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate2() {
-	time_current = addduration(gate_duration); //	millis() + gate_duration;
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
 // włącz LED
 	ledOn = true;
 	relled.setOn();
@@ -381,7 +381,8 @@ void GateAuto::opengate() {
 	DEBUG_MSG_PROG("[GATE] Start opengate() currentstate = %d \n\r", currentstate);
 }
 void GateAuto::closegate() {
-	time_current = addduration(gate_duration); //	millis() + gate_duration;
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
+	time_current = 0;
 // włącz LED
 	ledOn = true;
 	relled.setOn();
@@ -526,7 +527,7 @@ void GateAuto::gateloop() {
 			break;
 		}
 		break;
-	case 3:		//dgy klawisz C
+	case 3:		//gdy klawisz C
 		//gdy wciśnięto klawisz C to otwórz zamek furtki
 		openwicket();
 		nkeyx = 0;

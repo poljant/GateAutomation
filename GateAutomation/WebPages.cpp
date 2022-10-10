@@ -158,7 +158,7 @@ String	buff="";
 	}else{
 		buff = PSTR("<p><a href = \"/gc\"><button class=\"btn btn-info\">Zamknij brame.</button></a></p>");}
 //	if(ga.currentstate==GATE_OPEN2 or ga.currentstate==GATE_OPENING2){
-	if(ga.currentstate==GATE_OPEN2){
+	if(ga.currentstate == GATE_OPEN2){
 		buff+=PSTR("<p><a href = \"/glc\"><button class=\"btn btn-info\">Zamknij skrzydło bramy.</button></a></p>");
 	}else{
 		buff+=PSTR("<p><a href = \"/glo\"><button class=\"btn btn-info\">Otwórz skrzydło bramy.</button></a></p>");}
@@ -261,30 +261,29 @@ void setservers() {
 
 	httpserver.on("/gc", []()     //  zamknij brame
 			{
-		//gdy brama jest otwarta lub otwierana
+		//gdy brama jest otwarta lub otwierana, to zamknij
 		if(GATE_OPEN == ga.currentstate or GATE_OPENING == ga.currentstate){
-				ga.nkey = 1;
+			ga.currentstate = GATE_CLOSING;
 				ga.closegate();
-				ga.nkey = 0;}
+		}
 				httpserver.send(200, "text/html", WebPage());
 			});
 
 	httpserver.on("/go", []()      // otwórz brame
 			{
-		//gdy brama jest zamknięta lub zamykana
+		//gdy brama jest zamknięta lub zamykana, to otwórz
 		if(GATE_CLOSE == ga.currentstate or GATE_CLOSING == ga.currentstate){
-				ga.nkey = 1;
+			ga.currentstate = GATE_OPENING;
 				ga.opengate();
-				ga.nkey = 0;}
+		}
 				httpserver.send(200, "text/html", WebPage());
 			});
 
 	httpserver.on("/glc", []()     // zamknij skrzydło bramy
 			{
 		if(GATE_OPEN2 == ga.currentstate or GATE_OPENING2 == ga.currentstate){
-				ga.nkey = 2;
+				ga.currentstate = GATE_OPENING2;
 				ga.closegate2();
-	//			ga.nkey = 0;
 		}
 				httpserver.send(200, "text/html", WebPage());
 			});
@@ -292,17 +291,14 @@ void setservers() {
 	httpserver.on("/glo", []()      // otwórz skrzydło bramy
 			{
 		if(GATE_CLOSE == ga.currentstate or GATE_CLOSING2 == ga.currentstate){
-				ga.nkey = 2;
+			ga.currentstate = GATE_OPENING2;
 				ga.opengate2();
-	//			ga.nkey = 0;
 		}
 				httpserver.send(200, "text/html", WebPage());
 			});
 	httpserver.on("/wo", []()     // otwórz furtke
 			{
-				ga.nkey = 3;
 				ga.openwicket();
-				ga.nkey = 0;
 				httpserver.send(200, "text/html", WebPage());
 			});
 

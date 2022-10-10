@@ -49,7 +49,7 @@ void GateAuto::begin() {
 	myrc.setPulseLength(400);
 	//   buttondevice.begin(pin_button);
 	//   buttondevice.setClickHandler(clickdev);
-
+	currentstate = GATE_CLOSE;
 	DEBUG_MSG_PROG("[GATE] Start begin()");
 	addcodesrc();
 }
@@ -105,55 +105,7 @@ void GateAuto::addcodesrc() {
 //	DEBUG_MSG_PROG("[GATE] Start addcodesrc() \n\r");
 }
 
-void GateAuto::opengate1() {
-// włącz LED
-	ledOn = true;
-	relled.setOn();
-//otwórz pierwsze skrzydło bramy
-	rel1A.setOn();
-	rel1B.setOff();
-//	currentstate = GATE_OPENING1;
-//	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
-}
-void GateAuto::closegate1() {
-// włącz LED
-	ledOn = true;
-	relled.setOn();
-//zamknij pierwsze skrzydło bramy
-	rel1A.setOff();
-	rel1B.setOn();
-//	currentstate = GATE_CLOSING1;
-//	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
-}
-void GateAuto::opengate2() {
-//	time_current = addduration(gate_duration); //	millis() + gate_duration;
-	time_current = 0;
-// włącz LED
-	ledOn = true;
-	relled.setOn();
-//otwórz drugie skrzydło bramy
-	rel2A.setOn();
-	rel2B.setOff();
-	if (nkey == 2){
-	currentstate = GATE_OPENING2;
 
-	}
-	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
-}
-void GateAuto::closegate2() {
-//	time_current = addduration(gate_duration); //	millis() + gate_duration;
-// włącz LED
-	ledOn = true;
-	relled.setOn();
-//zamknij drugie skrzydło bramy
-	rel2A.setOff();
-	rel2B.setOn();
-	if (nkey == 2){
-	currentstate = GATE_CLOSING2;
-
-	}
-	DEBUG_MSG_PROG("[GATE] Start closegate2() currentstate = %d \n\r", currentstate);
-}
 bool GateAuto::bellon() {
 
 	return false;
@@ -366,6 +318,55 @@ void GateAuto::stop() {
 	currentstate = currentstate | GATE_STOP;
 	DEBUG_MSG_PROG("[GATE] Stop() currentstate = %d \n\r", currentstate);
 }
+void GateAuto::opengate1() {
+// włącz LED
+	ledOn = true;
+	relled.setOn();
+//otwórz pierwsze skrzydło bramy
+	rel1A.setOn();
+	rel1B.setOff();
+//	currentstate = GATE_OPENING1;
+//	DEBUG_MSG_PROG("[GATE] Start opengate1() currentstate = %d \n\r", currentstate);
+}
+void GateAuto::closegate1() {
+// włącz LED
+	ledOn = true;
+	relled.setOn();
+//zamknij pierwsze skrzydło bramy
+	rel1A.setOff();
+	rel1B.setOn();
+//	currentstate = GATE_CLOSING1;
+//	DEBUG_MSG_PROG("[GATE] Start closegate1() currentstate = %d \n\r", currentstate);
+}
+void GateAuto::opengate2() {
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
+	time_current = 0;
+// włącz LED
+	ledOn = true;
+	relled.setOn();
+//otwórz drugie skrzydło bramy
+	rel2A.setOn();
+	rel2B.setOff();
+	if (nkey == 2){
+	currentstate = GATE_OPENING2;
+
+	}
+	DEBUG_MSG_PROG("[GATE] Start opengate2() currentstate = %d \n\r", currentstate);
+}
+void GateAuto::closegate2() {
+//	time_current = addduration(gate_duration); //	millis() + gate_duration;
+// włącz LED
+	ledOn = true;
+	relled.setOn();
+//zamknij drugie skrzydło bramy
+	rel2A.setOff();
+	rel2B.setOn();
+	if (nkey == 2){
+	currentstate = GATE_CLOSING2;
+
+	}
+	DEBUG_MSG_PROG("[GATE] Start closegate2() currentstate = %d \n\r", currentstate);
+}
 void GateAuto::opengate() {
 //	time_current = addduration(gate_duration); //	millis() + gate_duration;
 	time_current = 0;
@@ -421,6 +422,7 @@ void GateAuto::gateloop() {
 			time_read_code =  millis() + time_delay_read_nex_code;
 		}
 	}
+
 	//przetwarzaj klawisz wciśnięty
 	switch (nkeyx) {
 	case 1:		//gdy klawisz A
@@ -428,21 +430,15 @@ void GateAuto::gateloop() {
 		// gdy w czasie stop wcisnięto key A
 		if (currentstate & GATE_STOP) {
 			//skasuj bit stop
-			currentstate = (currentstate & 0b11);
+			currentstate = (currentstate ^ GATE_STOP); //& 0b01111111);
 			//gdy stop był w czasie otwierania, to zamknij
-			if (currentstate == GATE_OPENING) {
+			if (currentstate & GATE_OPENING) {
 				closegate();
-//				currentstate = GATE_CLOSING;
-				//opengate();
-//				time_current = addduration(gate_duration); //	millis() + gate_duration;
 				break;
 			} else{
 				//gdy stop był w czasie zamykania, to otwórz
-				if (currentstate == GATE_CLOSING) {
+				if (currentstate & GATE_CLOSING) {
 						opengate();
-//						currentstate = GATE_OPENING;
-						//closegate();
-//						time_current = addduration(gate_duration); //millis() + gate_duration;
 						break;
 					}
 					break;
@@ -452,13 +448,11 @@ void GateAuto::gateloop() {
 		// gdy brama zamknięta i wciśnięto key A to otwórz
 		if (currentstate == GATE_CLOSE) {
 			opengate();
-//			time_current = addduration(gate_duration); //millis() + gate_duration;
 			break;
 		}
 		//gdy brama otwarta i wciśnięto key A to zamknij
 		if (currentstate == GATE_OPEN) {
 			closegate();
-//			time_current = addduration(gate_duration); //millis() + gate_duration;
 			break;
 		}
 
@@ -481,19 +475,17 @@ void GateAuto::gateloop() {
 		// gdy w czasie stop wcisnięto key B
 		if (currentstate & GATE_STOP) {
 			//skasuj bit stop
-			currentstate = (currentstate & 0b01111111);
+			currentstate = (currentstate ^ GATE_STOP);
 			//gdy stop był w czasie zamykania, to otwórz
 			if (currentstate == GATE_CLOSING2) {
-				opengate2();
 				currentstate = GATE_OPENING2;
-//				time_current = addduration(gate_duration); //millis() + gate_duration;
+				opengate2();
 				break;
 			} else {
 				//gdy stop był w czasie otwierania, to zamknij
 				if (currentstate == GATE_OPENING2) {
-					closegate2();
 					currentstate = GATE_CLOSING2;
-//					time_current = addduration(gate_duration); //millis() + gate_duration;
+					closegate2();
 					break;
 				}
 				break;
@@ -503,14 +495,14 @@ void GateAuto::gateloop() {
 		//						currentstate);
 		// gdy brama zamknięta i wciśnięto key B to otwórz
 		if (currentstate == GATE_CLOSE) {
+			currentstate = GATE_OPENING2;
 			opengate2();
-//			time_current = addduration(gate_duration); //millis() + gate_duration;
 			break;
 		}
 		//gdy brama otwarta i wciśnięto key B to zamknij
 		if (currentstate == GATE_OPEN2) {
+			currentstate = GATE_CLOSING2;
 			closegate2();
-//			time_current = addduration(gate_duration); //millis() + gate_duration;
 			break;
 		}
 
@@ -537,9 +529,12 @@ void GateAuto::gateloop() {
 		//załącz lub wyłącz autoclose
 		if (autoclose){
 			autoclose= false;
+			DEBUG_MSG_PROG(	"[GATE_LOOP] Autoclose = false\n\r");
 		}else{
 			autoclose= true;
+			DEBUG_MSG_PROG(	"[GATE_LOOP] Autoclose = true\n\r");
 		}
+
 		nkeyx = 0;
 		break;
 
@@ -548,15 +543,18 @@ void GateAuto::gateloop() {
 		break;
 
 	};
-	//gdy nie trwa zamykanie lub otwieranie bramy (takes == false) i zmienił się status bieżący bramy (currentstate > 0)
-	// to ustal czas trwania działania bramy (time_current + bieżący czas + gate_duration) i ustaw, że trwa działanie bramy (takes = true)
-	if (!takes and (currentstate > 0) and (time_current < millis())) {
+	//gdy nie trwa zamykanie lub otwieranie bramy (bit GATE_TIMERS = 0) i zmienił się status bieżący bramy
+	// ustawiony bit GATE_OPENING2 lub GATE_OPENING
+	// to ustal czas trwania działania bramy (time_current + bieżący czas + gate_duration) i ustaw, że trwa działanie bramy (bit GATE_TIMER na 1)
+	if(!(currentstate & GATE_TIMER) and (currentstate & (GATE_OPENING | GATE_CLOSING))){
 		time_current = addduration(gate_duration); //millis() + gate_duration;
-		takes = true;
+		//ustaw bit timera
+		currentstate = currentstate | GATE_TIMER;
 	};
 	//gdy trwa działanie bramy, to sprawdź czy czas minął
-	if (takes and (time_current < millis())) {
-		takes = false;	//zaznacz , że działanie ustało
+	if ((currentstate & GATE_TIMER) and (time_current < millis())) {
+		//jeśli czas minoł to wyłącz bit timera
+		currentstate = currentstate ^ GATE_TIMER;
 		//gdy trwa stan stop
 		if (currentstate & GATE_STOP) {
 			time_current = addduration(gate_duration); //millis() + gate_duration; //zwiększ czas trwania
@@ -571,8 +569,6 @@ void GateAuto::gateloop() {
 				DEBUG_MSG_PROG(
 						"[GATE_LOOP] Bramam2 została otwarta. Currentstate = %d \n\r",
 						currentstate);
-				// wyłącz LED
-				//relled.setOff();
 			}
 			//gdy brama 2 była zamykana, to zaznacz, że brama 2 została zamknięta
 			if (currentstate == GATE_CLOSING2) {
@@ -580,8 +576,6 @@ void GateAuto::gateloop() {
 				DEBUG_MSG_PROG(
 						"[GATE_LOOP] Bramam2 została zamknięta. Currentstate = %d \n\r",
 						currentstate);
-				// wyłącz LED
-				//relled.setOff();
 			}
 			//gdy brama była otwierana, zaznacz, że brama została otwarta
 			if (currentstate == GATE_OPENING) {
@@ -589,8 +583,6 @@ void GateAuto::gateloop() {
 				DEBUG_MSG_PROG(
 						"[GATE_LOOP] Bramam została otwarta. Currentstate = %d \n\r",
 						currentstate);
-				// wyłącz LED
-				//relled.setOff();
 			}
 			//gdy brama była zamykana, to zaznacz, że brama została zamknięta
 			if (currentstate == GATE_CLOSING) {
@@ -598,8 +590,6 @@ void GateAuto::gateloop() {
 				DEBUG_MSG_PROG(
 						"[GATE_LOOP] Bramam została zamknięta. Currentstate = %d \n\r",
 						currentstate);
-				// wyłącz LED
-				//relled.setOff();
 			}
 			// wyłącz LED
 			ledOn = false;
@@ -608,7 +598,7 @@ void GateAuto::gateloop() {
 
 	};
 	//gdy ustawiono automatyczne zamykanie otwartej bramy i brama jest otwarta
-	if (autoclose and currentstate == GATE_OPEN){
+	if (autoclose and (currentstate & GATE_OPEN )){
 
 		//gdy nie trwa autozamykanie ustal czas trwania otwartej bramy
 		//zaznacz, że zaczęto odliczać czas otwarcia
@@ -623,7 +613,14 @@ void GateAuto::gateloop() {
 			takes_autoclose = false;
 			DEBUG_MSG_PROG(	"[GATE_LOOP] Zakończył się czas liczenia do zamknięcia bramy\n\r");
 			//uruchom zamykanie bramy
-			closegate();
+			if (currentstate == GATE_OPEN2){
+				currentstate = GATE_CLOSING2;
+				closegate2();
+			}
+			if (currentstate == GATE_OPEN){
+				currentstate = GATE_CLOSING;
+				closegate();
+						}
 		}
 
 	}

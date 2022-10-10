@@ -10,24 +10,38 @@
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.3.4 beta"
+#define VERSION "0.4.5 beta"
 #define IP_STATIC
 #define DEBUG
 //add manual button
 #define BUTTON2
 #define HOSTNAME "GateAutomation"
-#define GATE_CLOSE        0b00	//brama zamknięta
-#define GATE_OPEN   0b01000000	//brama otwarta
-#define GATE_OPEN2  0b01010000	//brama2 otwarta
-#define GATE_OPENING      0b01	//brama jest otwierana
-#define GATE_CLOSING     0b010	//brama jest zamykana
-#define GATE_OPENING1  0b01001	//brama 1 jest otwierana
-#define GATE_CLOSING1  0b01010	//brama 1 jest zamykana
-#define GATE_OPENING2 0b010001	//brama 2 jest otwierana
-#define GATE_CLOSING2 0b010010	//brama 2 jest zamykana
-#define GATE_STOP   0b10000000	//brama ruch bramy jest zatrzymany
+#define GATE_TIMER    0b00100000	//brama zamknięta
+#define GATE_CLOSE    0b00000100	//brama zamknięta
+#define GATE_OPEN     0b01000000	//brama otwarta
+#define GATE_OPEN2    0b01010000	//brama2 otwarta
+#define GATE_OPENING  0b00000001	//brama jest otwierana
+#define GATE_CLOSING  0b00000010	//brama jest zamykana
+#define GATE_OPENING1 0b00001001	//brama 1 jest otwierana
+#define GATE_CLOSING1 0b00001010	//brama 1 jest zamykana
+#define GATE_OPENING2 0b00010001	//brama 2 jest otwierana
+#define GATE_CLOSING2 0b00010010	//brama 2 jest zamykana
+#define GATE_STOP     0b10000000	//brama ruch bramy jest zatrzymany
 #define HOWMANYKEYS		12	// ile pilotów * ile klawiszy 3*4=12
 
+/*typedef union{
+	uint8_t data;
+	struct {
+		uint8_t opening : 1;
+		uint8_t closing : 1;
+		uint8_t void1 : 1;
+		uint8_t gate1 : 1;
+		uint8_t gate2 : 1;
+		uint8_t void2 : 1;
+		uint8_t open : 1;
+		uint8_t stop : 1;
+	};
+}STATUS;*/
 /*typedef union {
   uint32_t data;
   struct {
@@ -57,11 +71,11 @@ class GateAuto {
 	uint8_t pin_TxD = 1;	//TxD
 	uint8_t pin_led = 2; //GPIO2 D4
 
-	bool takes = false;	//ruch bramy trwa to true
+//	bool takes = false;	//ruch bramy trwa to true
 	bool takes_autoclose = false;	// true działa automatyczzne zamykanie bramy
 
 //	int time_closing = 15; // sek
-	int duration_sek = 50;  // ile sekund trwa zamykanie lub otwieranie bramy
+	int duration_sek = 10;  // ile sekund trwa zamykanie lub otwieranie bramy
 	int gate_duration = duration_sek * 1000;	//czas działania ruchu bramy w milisekundach
 	int time_delay_gateA = 0 * 1000;	//msekund  opóźnienie rozpoczęcia ruchu bramy 1
 	int time_delay_gateB = 2 * 1000;	//msekund  opóźnienie rozpoczęcia ruchu bramy 2
@@ -85,12 +99,12 @@ public:
 //	int howmanykeys = 12;	//ile pilotów * ile klawiszy -- 3 * 4
 	datakeys buffercoderc[HOWMANYKEYS];	//ile pilotów * ile klawiszy -- 3 * 4
 	//zmienne pamiętające status bramy
-	uint8_t currentstate = 0b0;
+	uint8_t currentstate = GATE_CLOSE;
 	// czy brama zamykana automatycznie po określonym czasie otwarcia
 	bool autoclose = false;
 	//gdy sygnalizacja led ma w sobie pulsator
 	bool led_pulse = false; //czy sygnalizacja led ma pulsować? tak = true, nie = false
-	int time_autoclose = 180 ; //  sekund
+	int time_autoclose = 18 ; //  sekund
 	unsigned long curent_time_autoclose = 0;
 	bool ledOn = false; //czy led ma być załaczony true czy nie false
 	long double time_blink = 0; // zmienna do tworzenia migotania led

@@ -130,23 +130,23 @@ String HTMLPage1() {             //   page
 	case GATE_CLOSE:
 		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA ZAMKNIĘTA"));
 		break;
-	case GATE_OPENING:
+	case (GATE_OPENING | GATE_TIMER):
 		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST OTWIERANA"));
 		break;
-	case GATE_CLOSING:
+	case (GATE_CLOSING | GATE_TIMER):
 		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZAMYKANA"));
 		break;
-	case GATE_OPENING2:
+	case (GATE_OPENING2 | GATE_TIMER):
 		sprintf_P(buff, HTML_PAGE1,  PSTR("SKRZYDŁO BRAMY JEST OTWIERANE"));
 		break;
-	case GATE_CLOSING2:
+	case (GATE_CLOSING2 | GATE_TIMER):
 		sprintf_P(buff, HTML_PAGE1,  PSTR("SKRZYDŁO BRAMY JEST ZAMYKANE"));
 		break;
-	case GATE_STOP:
+	case (GATE_STOP | GATE_TIMER):
 		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA JEST ZATRZYMANA"));
 		break;
 	default:
-		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA XXX "));
+		sprintf_P(buff, HTML_PAGE1, PSTR("BRAMA "));
 	};
 	return buff;
 }
@@ -162,6 +162,9 @@ String	buff="";
 		buff+=PSTR("<p><a href = \"/glc\"><button class=\"btn btn-info\">Zamknij skrzydło bramy.</button></a></p>");
 	}else{
 		buff+=PSTR("<p><a href = \"/glo\"><button class=\"btn btn-info\">Otwórz skrzydło bramy.</button></a></p>");}
+//	if(!(ga.currentstate & GATE_STOP)){
+//		buff+=PSTR("<p><a href = \"/gs\"><button class=\"btn btn-info\">Zatrzymaj brame.</button></a></p>");
+//	}
 	buff+=PSTR("<p><a href = \"/wo\"><button class=\"btn btn-info\">Otwórz furtke.</button></a></p>");
 	buff+=PSTR("<p><a href = \"/scx\"><button class=\"btn btn-info\">Programowanie pilota.</button></a></p>");
 	buff+=PSTR("<p><a href = \"/acx\"><button class=\"btn btn-info\">Dodawanie pilota.</button></a></p>");
@@ -253,47 +256,58 @@ String WebPage4() {       // połącz wszystkie części strony www
 void setservers() {
 	httpUpdate.setup(&httpserver, "/update", www_login, www_pass); // umożliwia aktualizację poprzez WiFi
 
-	httpserver.on("/", []()
-		{
+	httpserver.on("/", []() {
 		ga.service = false;
 		httpserver.send(200, "text/html", WebPage());
 	});
 
 	httpserver.on("/gc", []()     //  zamknij brame
 			{
-		//gdy brama jest otwarta lub otwierana, to zamknij
-		if(GATE_OPEN == ga.currentstate or GATE_OPENING == ga.currentstate){
-			ga.currentstate = GATE_CLOSING;
-				ga.closegate();
-		}
+				//gdy brama jest otwarta lub otwierana, to zamknij
+				if (GATE_OPEN == ga.currentstate
+						or GATE_OPENING == ga.currentstate) {
+///		ga.nkey = 0b10000001;
+					ga.currentstate = GATE_CLOSING;
+					ga.closegate();
+				}
 				httpserver.send(200, "text/html", WebPage());
 			});
 
 	httpserver.on("/go", []()      // otwórz brame
 			{
-		//gdy brama jest zamknięta lub zamykana, to otwórz
-		if(GATE_CLOSE == ga.currentstate or GATE_CLOSING == ga.currentstate){
-			ga.currentstate = GATE_OPENING;
-				ga.opengate();
-		}
+				//gdy brama jest zamknięta lub zamykana, to otwórz
+				if (GATE_CLOSE == ga.currentstate
+						or GATE_CLOSING == ga.currentstate) {
+					ga.nkey = 0b10000001;
+					ga.currentstate = GATE_OPENING;
+					ga.opengate();
+				}
 				httpserver.send(200, "text/html", WebPage());
 			});
 
+	httpserver.on("/gs", []()      // otwórz brame
+			{
+				//gdy brama jest zamykana lub otwierana, to zatrzymaj
+				ga.stop();
+				httpserver.send(200, "text/html", WebPage());
+			});
 	httpserver.on("/glc", []()     // zamknij skrzydło bramy
 			{
-		if(GATE_OPEN2 == ga.currentstate or GATE_OPENING2 == ga.currentstate){
-				ga.currentstate = GATE_OPENING2;
-				ga.closegate2();
-		}
+				if (GATE_OPEN2 == ga.currentstate
+						or GATE_OPENING2 == ga.currentstate) {
+					ga.currentstate = GATE_OPENING2;
+					ga.closegate2();
+				}
 				httpserver.send(200, "text/html", WebPage());
 			});
 
 	httpserver.on("/glo", []()      // otwórz skrzydło bramy
 			{
-		if(GATE_CLOSE == ga.currentstate or GATE_CLOSING2 == ga.currentstate){
-			ga.currentstate = GATE_OPENING2;
-				ga.opengate2();
-		}
+				if (GATE_CLOSE == ga.currentstate
+						or GATE_CLOSING2 == ga.currentstate) {
+					ga.currentstate = GATE_OPENING2;
+					ga.opengate2();
+				}
 				httpserver.send(200, "text/html", WebPage());
 			});
 	httpserver.on("/wo", []()     // otwórz furtke
@@ -307,21 +321,21 @@ void setservers() {
 				httpserver.send(200, "text/html", WebPage2());
 			});
 	httpserver.on("/scx0", []()      // Programowanie klawisza A
-				{
-					httpserver.send(200, "text/html", WebPage3(0));
-				});
+			{
+				httpserver.send(200, "text/html", WebPage3(0));
+			});
 	httpserver.on("/scx1", []()      // Programowanie klawisza B
-					{
-						httpserver.send(200, "text/html", WebPage3(1));
-					});
+			{
+				httpserver.send(200, "text/html", WebPage3(1));
+			});
 	httpserver.on("/scx2", []()      // Programowanie klawisza B
-					{
-						httpserver.send(200, "text/html", WebPage3(2));
-					});
+			{
+				httpserver.send(200, "text/html", WebPage3(2));
+			});
 	httpserver.on("/scx3", []()      // Programowanie klawisza B
-					{
-						httpserver.send(200, "text/html", WebPage3(3));
-					});
+			{
+				httpserver.send(200, "text/html", WebPage3(3));
+			});
 	httpserver.on("/scA", []()      // wyślij kod klawisza A
 			{
 				ga.sendcodeA();
@@ -350,66 +364,66 @@ void setservers() {
 				httpserver.send(200, "text/html", WebPage3(3));
 			});
 	httpserver.on("/acx", []()      // Dodawanie pilota
-				{
-					httpserver.send(200, "text/html", WebPage4());
-				});
-		httpserver.on("/acx0", []()      // Dodawanie klawisza A
-					{
-						httpserver.send(200, "text/html", WebPage4a(0));
-					});
-		httpserver.on("/acx1", []()      // Dodawanie klawisza B
-						{
-							httpserver.send(200, "text/html", WebPage4a(1));
-						});
-		httpserver.on("/acx2", []()      // Dodawanie klawisza C
-						{
-							httpserver.send(200, "text/html", WebPage4a(2));
-						});
-		httpserver.on("/acx3", []()      // Dodawanie klawisza D
-						{
-							httpserver.send(200, "text/html", WebPage4a(3));
-						});
+			{
+				httpserver.send(200, "text/html", WebPage4());
+			});
+	httpserver.on("/acx0", []()      // Dodawanie klawisza A
+			{
+				httpserver.send(200, "text/html", WebPage4a(0));
+			});
+	httpserver.on("/acx1", []()      // Dodawanie klawisza B
+			{
+				httpserver.send(200, "text/html", WebPage4a(1));
+			});
+	httpserver.on("/acx2", []()      // Dodawanie klawisza C
+			{
+				httpserver.send(200, "text/html", WebPage4a(2));
+			});
+	httpserver.on("/acx3", []()      // Dodawanie klawisza D
+			{
+				httpserver.send(200, "text/html", WebPage4a(3));
+			});
 	httpserver.on("/acA", []()      //dodaj kod klawisza A
 			{
 				ga.service = true;
-				ga.addcoderc(ga.readcoderc(),0);
-				ga.ncodrc=0;
+				ga.addcoderc(ga.readcoderc(), 0);
+				ga.ncodrc = 0;
 				httpserver.send(200, "text/html", WebPage4a(0));
 			});
 
 	httpserver.on("/acB", []()      //dodaj kod klawisza B
 			{
 				ga.service = true;
-				ga.addcoderc(ga.readcoderc(),1);
-				ga.ncodrc=0;
+				ga.addcoderc(ga.readcoderc(), 1);
+				ga.ncodrc = 0;
 				httpserver.send(200, "text/html", WebPage4a(1));
 			});
 
 	httpserver.on("/acC", []()      //dodaj kod klawisza C
 			{
 				ga.service = true;
-				ga.addcoderc(ga.readcoderc(),2);
-				ga.ncodrc=0;
+				ga.addcoderc(ga.readcoderc(), 2);
+				ga.ncodrc = 0;
 				httpserver.send(200, "text/html", WebPage4a(2));
 			});
 
 	httpserver.on("/acD", []()      //dodaj kod klawisza D
 			{
 				ga.service = true;
-				ga.addcoderc(ga.readcoderc(),3);
-				ga.ncodrc=0;
+				ga.addcoderc(ga.readcoderc(), 3);
+				ga.ncodrc = 0;
 				httpserver.send(200, "text/html", WebPage4a(3));
 			});
 
 	httpserver.on("/autoc1", []()      // ustaw autoclose
 			{
-				ga.autoclose= true;
+				ga.autoclose = true;
 				//	   saveEEProm();
 				httpserver.send(200, "text/html", WebPage());
 			});
 	httpserver.on("/autoc0", []()      // wstrzymaj autoclose
 			{
-				ga.autoclose= false;
+				ga.autoclose = false;
 				//	   saveEEProm();
 				httpserver.send(200, "text/html", WebPage());
 			});
@@ -425,12 +439,12 @@ void setservers() {
 				httpserver.send(200, "text/html", WebPage());
 			});
 	httpserver.on("/reboot", []()      // uruchom ponownie
-				{
-		//ESP.reset();
-		ESP.restart();
-					//	   saveEEProm();
-					httpserver.send(200, "text/html", WebPage());
-				});
+			{
+				//ESP.reset();
+				ESP.restart();
+				//	   saveEEProm();
+				httpserver.send(200, "text/html", WebPage());
+			});
 
 	httpserver.begin();                // Start serwera www
 #ifdef DEBUG

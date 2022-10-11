@@ -404,6 +404,13 @@ void GateAuto::gateloop() {
 			// jeśli nie to wyłącz
 		if(relled.read()) relled.setOff();
 	}
+	//dane strony wwww
+	// nkey = nkey + 128
+	if(nkey & 0b10000000){
+		//usuń bit 8
+		nkey = nkey ^ 0b10000000;
+		nkeyx = nkey;
+	}else{
 	//czekaj aż minie czas od ostatniego naciśnięcia klawisza na pilocie
 	if (time_read_code <= millis()) {
 		readcodercx(); //czytaj kod
@@ -416,11 +423,12 @@ void GateAuto::gateloop() {
 		//gdy kod odczytano
 		if (codrc > 0) {
 			nkeyx = serchcodes(codrc); //sprawdź czy kod dozwolony
-			DEBUG_MSG_PROG("[GATE_LOOP] Coderc %d, nkey = %d  \n\r", codrc,
+			DEBUG_MSG_PROG("[GATE_LOOP]%ld Coderc %d, nkey = %d  \n\r", millis(),codrc,
 					nkeyx);
 			//ustaw opuźnienie do czytania kolejnego kodu
 			time_read_code =  millis() + time_delay_read_nex_code;
 		}
+	}
 	}
 
 	//przetwarzaj klawisz wciśnięty

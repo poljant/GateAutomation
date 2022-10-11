@@ -10,7 +10,7 @@
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
-#define VERSION "0.4.5 beta"
+#define VERSION "0.4.7 beta"
 #define IP_STATIC
 #define DEBUG
 //add manual button
